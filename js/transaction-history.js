@@ -166,7 +166,8 @@ var TransactionHistory = (function () {
     if (emptyMsg) emptyMsg.style.display = 'none';
 
     var esc = Utils.escapeHtml;
-    var html = '<table class="data-table" id="history-table">';
+    var html = '<div class="table-wrapper">';
+    html += '<table class="data-table" id="history-table">';
     html += '<thead><tr>';
     html += '<th>Date</th><th>Bill No.</th><th>Items</th><th>Quantities</th><th>Total</th><th>Action</th>';
     html += '</tr></thead><tbody>';
@@ -189,6 +190,7 @@ var TransactionHistory = (function () {
     }
 
     html += '</tbody></table>';
+    html += '</div>'; // close .table-wrapper
     tableContainer.innerHTML = html;
 
     // Attach delete handlers
@@ -304,7 +306,7 @@ var TransactionHistory = (function () {
 
     // ── Transaction Table Container ──
     html += '<div class="history-section">';
-    html += '<div class="table-container" id="history-table-container"></div>';
+    html += '<div class="table-wrapper" id="history-table-container"></div>';
     html += '<p id="history-empty-msg" class="empty-state" style="display:none;">No transactions found.</p>';
     html += '</div>';
 

@@ -418,7 +418,7 @@ var Billing = (function () {
     // ── Line Items Table ──
     html += '<div class="billing-section billing-items">';
     html += '<h2 class="section-heading">Bill Items</h2>';
-    html += '<div class="table-container">';
+    html += '<div class="table-wrapper">';
     html += '<table class="data-table" id="billing-items-table">';
     html += '<thead><tr>';
     html += '<th>#</th><th>Item</th><th>Qty</th>';

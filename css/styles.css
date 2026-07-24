@@ -927,6 +927,279 @@ body {
 }
 
 /* ============================================
+   Module-Specific Mobile Fixes
+   Ensures all modules are mobile-friendly:
+   - Toolbars wrap buttons on narrow screens
+   - Tables scroll horizontally
+   - Modals fit small screens
+   - Forms use full width
+   ============================================ */
+
+/* --- Toolbar & Button Group Wrapping --- */
+.inv-toolbar,
+.barcode-toolbar,
+.report-date-controls,
+.report-actions,
+.billing-actions,
+.exp-filters,
+.history-section .form-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+}
+
+/* --- Table Scroll Containers --- */
+.inv-table-container,
+.table-wrapper,
+.table-container,
+.exp-table-container,
+.bc-item-list .table-wrapper {
+  overflow-x: auto;
+  max-width: 100%;
+  -webkit-overflow-scrolling: touch;
+}
+
+/* --- Import/Export Sections --- */
+.ie-section {
+  margin-bottom: 24px;
+  padding: 16px;
+  background-color: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
+}
+
+/* --- Settings Sections --- */
+.settings-section {
+  margin-bottom: 24px;
+  padding: 16px;
+  background-color: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
+}
+
+/* --- Mobile-specific overrides (<=768px) --- */
+@media (max-width: 768px) {
+  /* Toolbars: stack and wrap buttons */
+  .inv-toolbar,
+  .barcode-toolbar,
+  .report-date-controls,
+  .report-actions,
+  .billing-actions,
+  .exp-filters {
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+
+  .inv-toolbar .btn,
+  .barcode-toolbar .btn,
+  .report-date-controls .btn,
+  .report-actions .btn,
+  .billing-actions .btn,
+  .exp-filters .btn {
+    flex: 1 1 auto;
+    min-width: 120px;
+  }
+
+  /* Search inputs in toolbars: full width */
+  .inv-toolbar .inv-search-input,
+  .inv-toolbar .inv-filter-select {
+    width: 100%;
+    flex: 1 1 100%;
+  }
+
+  /* Modals: fit small screens */
+  .modal-overlay .modal-dialog,
+  .modal-overlay .modal {
+    width: calc(100% - 32px);
+    max-width: 100%;
+    max-height: 85vh;
+    overflow-y: auto;
+    margin: 16px;
+  }
+
+  /* Form rows inside modals: stack labels above inputs */
+  .modal-overlay .form-row,
+  .modal-dialog .form-row {
+    display: block;
+  }
+
+  .modal-overlay .form-row label,
+  .modal-dialog .form-row label {
+    display: block;
+    margin-bottom: 4px;
+    font-weight: 500;
+  }
+
+  .modal-overlay .form-row input,
+  .modal-overlay .form-row select,
+  .modal-overlay .form-row textarea,
+  .modal-dialog .form-row input,
+  .modal-dialog .form-row select,
+  .modal-dialog .form-row textarea {
+    width: 100%;
+    min-height: 44px;
+  }
+
+  /* Table action buttons: smaller on mobile, allow wrapping */
+  .inv-actions .btn,
+  .data-table .btn,
+  .inv-table-container .btn {
+    font-size: 0.75rem;
+    padding: 6px 10px;
+    white-space: normal;
+    min-width: 36px;
+    min-height: 36px;
+  }
+
+  /* Tables: ensure horizontal scroll */
+  .inv-table-container,
+  .table-wrapper,
+  .table-container,
+  .exp-table-container {
+    overflow-x: auto;
+    max-width: 100%;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  /* Settings form: full width */
+  .settings-section {
+    width: 100%;
+    padding: 12px;
+  }
+
+  .settings-section .form-input,
+  .settings-section input,
+  .settings-section select,
+  .settings-section textarea {
+    width: 100%;
+  }
+
+  /* Import/Export: full width, stack layout */
+  .ie-section {
+    width: 100%;
+    padding: 12px;
+  }
+
+  .ie-section .btn {
+    display: block;
+    width: 100%;
+    margin-top: 8px;
+  }
+
+  .ie-section p {
+    margin-bottom: 8px;
+  }
+
+  /* Expense form grid: single column */
+  .exp-form-container .form-grid {
+    display: block;
+  }
+
+  .exp-form-container .form-row {
+    margin-bottom: 12px;
+  }
+
+  /* Expense filters: stack */
+  .exp-filters {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .exp-filters input,
+  .exp-filters select,
+  .exp-filters .btn {
+    width: 100%;
+  }
+
+  /* Material request: mobile adjustments */
+  .mr-item-row {
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+
+  .mr-item-row .mr-item-select {
+    flex: 1 1 100%;
+  }
+
+  .mr-item-row .mr-item-qty {
+    flex: 1 1 60px;
+  }
+
+  /* Billing form row: stack on mobile */
+  .billing-add .form-row {
+    display: block;
+  }
+
+  .billing-add .form-group {
+    margin-bottom: 8px;
+  }
+
+  .billing-add .form-group-grow {
+    width: 100%;
+  }
+
+  .billing-add .form-group-btn .btn {
+    width: 100%;
+  }
+
+  /* Report tabs: scroll if needed */
+  .report-tabs {
+    display: flex;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    gap: 4px;
+  }
+
+  /* Transaction history form row fix */
+  .history-section .form-row {
+    display: block;
+  }
+
+  .history-section .form-group {
+    margin-bottom: 8px;
+  }
+
+  .history-section .form-input {
+    width: 100%;
+  }
+}
+
+/* --- Small Mobile (<=480px) extra fixes --- */
+@media (max-width: 480px) {
+  .inv-toolbar .btn,
+  .barcode-toolbar .btn {
+    font-size: 0.8125rem;
+    padding: 10px 12px;
+    min-width: 0;
+    flex: 1 1 calc(50% - 4px);
+  }
+
+  .barcode-toolbar select {
+    width: 100%;
+    flex: 1 1 100%;
+  }
+
+  .modal-overlay .modal-dialog,
+  .modal-overlay .modal {
+    width: calc(100% - 16px);
+    max-height: 90vh;
+    margin: 8px;
+    padding: 16px;
+  }
+
+  /* Summary cards: single column */
+  .exp-summary-cards {
+    display: block;
+  }
+
+  .exp-summary-card {
+    margin-bottom: 8px;
+  }
+}
+
+
+/* ============================================
    Print Styles
    ============================================ */
 @media print {
