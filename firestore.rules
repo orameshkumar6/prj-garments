@@ -1,0 +1,83 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    function isValidItem(data) {
+      return data.item_type is string && data.item_type.size() > 0 && data.item_type.size() <= 50
+        && data.vendor_code is string && data.vendor_code.size() > 0 && data.vendor_code.size() <= 20
+        && data.batch_code is string && data.batch_code.size() > 0 && data.batch_code.size() <= 20
+        && data.cost_price is number && data.cost_price > 0 && data.cost_price <= 9999999.99
+        && data.mrp is number && data.mrp > 0 && data.mrp <= 9999999.99
+        && data.sales_price is number && data.sales_price > 0 && data.sales_price <= data.mrp
+        && data.quantity is int && data.quantity >= 0;
+    }
+
+    match /items/{itemId} {
+      allow read: if true;
+      allow create: if isValidItem(request.resource.data);
+      allow update: if isValidItem(request.resource.data);
+      allow delete: if true;
+    }
+
+    match /transactions/{txId} {
+      allow read: if true;
+      allow create: if request.resource.data.bill_number is string
+        && request.resource.data.items is list
+        && request.resource.data.total is number && request.resource.data.total >= 0;
+      allow update, delete: if true;
+    }
+
+    match /expenses/{expId} {
+      allow read: if true;
+      allow create: if request.resource.data.amount is number
+        && request.resource.data.amount > 0
+        && request.resource.data.amount <= 9999999.99
+        && request.resource.data.description is string
+        && request.resource.data.description.size() >= 1
+        && request.resource.data.description.size() <= 200
+        && request.resource.data.category in ['Operational', 'Raw Material', 'Miscellaneous'];
+      allow update, delete: if true;
+    }
+
+    match /material_requests/{reqId} {
+      allow read: if true;
+      allow create: if request.resource.data.employee_name is string
+        && request.resource.data.employee_name.size() <= 100
+        && request.resource.data.items is list
+        && request.resource.data.status in ['Pending', 'Approved', 'Rejected'];
+      allow update, delete: if true;
+    }
+
+    match /material_request_log/{logId} {
+      allow read, write: if true;
+    }
+
+    match /replenishment_history/{repId} {
+      allow read: if true;
+      allow create: if request.resource.data.item_code is string
+        && request.resource.data.quantity is int
+        && request.resource.data.quantity >= 1
+        && request.resource.data.quantity <= 99999;
+      allow update, delete: if true;
+    }
+
+    match /documents/{docId} {
+      allow read: if true;
+      allow create: if request.resource.data.doc_type in ['RFQ', 'PO']
+        && request.resource.data.line_items is list;
+      allow update, delete: if true;
+    }
+
+    match /config/{configId} {
+      allow read: if true;
+      allow write: if true;
+    }
+
+    match /deletion_log/{logId} {
+      allow read: if true;
+      allow create: if request.resource.data.bill_number is string
+        && request.resource.data.total_amount is number;
+      allow update, delete: if false;
+    }
+  }
+}

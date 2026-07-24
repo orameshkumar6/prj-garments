@@ -637,3 +637,23 @@ var Reports = (function () {
         'btn-generate-reorder-report', 'btn-generate-stock-report');
     });
   }
+
+  // ─── Public API ─────────────────────────────────────────────────────────────
+
+  return {
+    init: init,
+    getSalesReport: getSalesReport,
+    getStockVerificationReport: getStockVerificationReport,
+    getEndOfSaleReport: getEndOfSaleReport,
+    getReorderReport: getReorderReport,
+    generateRFQ: generateRFQ,
+    generatePO: generatePO,
+    saveDocument: saveDocument
+  };
+
+})();
+
+// ─── Node.js Module Export (for testing) ────────────────────────────────────────
+if (typeof module !== 'undefined' && module.exports) {
+  module.exports = Reports;
+}

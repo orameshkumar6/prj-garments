@@ -708,3 +708,23 @@ var MaterialRequest = (function () {
       }
     }
   }
+
+  // ─── Public API ─────────────────────────────────────────────────────────────
+
+  return {
+    init: init,
+    createRequest: createRequest,
+    approveRequest: approveRequest,
+    rejectRequest: rejectRequest,
+    processReturn: processReturn,
+    getRequests: getRequests,
+    validateRequest: validateRequest,
+    validateReturn: validateReturn
+  };
+
+})();
+
+// ─── Node.js Module Export (for testing) ────────────────────────────────────────
+if (typeof module !== 'undefined' && module.exports) {
+  module.exports = MaterialRequest;
+}
