@@ -764,8 +764,8 @@ var Billing = (function () {
           rows += '<option value="' + esc(emp.employee_code) + '"' + selected + '>' + esc(emp.employee_code + ' - ' + emp.name) + '</option>';
         }
         rows += '</select></td>';
-        rows += '<td><button class="btn btn-sm btn-danger billing-remove-btn" ';
-        rows += 'data-index="' + i + '" type="button">×</button></td>';
+        rows += '<td><button class="btn-icon-sm btn-delete billing-remove-btn" ';
+        rows += 'data-index="' + i + '" type="button" aria-label="Remove item" title="Remove">🗑️</button></td>';
         rows += '</tr>';
       }
       tbody.innerHTML = rows;

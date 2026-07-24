@@ -52,7 +52,7 @@ var BarcodePrinter = (function() {
     var container = document.querySelector('#screen-barcode .screen-content');
     if (!container) return;
     container.innerHTML = '<h2>Barcode & Label Printing</h2>' +
-      '<div class="barcode-toolbar"><button id="bc-load-btn" class="btn btn-primary">Load Items</button> <button id="bc-select-all" class="btn btn-secondary">Select All</button> <button id="bc-deselect-all" class="btn btn-secondary">Deselect All</button> <select id="bc-format" aria-label="Barcode format"><option value="CODE128">Code128</option><option value="QR">QR Code</option></select> <button id="bc-print-btn" class="btn btn-primary">Print Selected</button></div>' +
+      '<div class="barcode-toolbar toolbar"><button id="bc-load-btn" class="btn btn-primary">📥 Load</button> <button id="bc-select-all" class="btn btn-secondary">☑️ All</button> <button id="bc-deselect-all" class="btn btn-secondary">⬜ None</button> <select id="bc-format" aria-label="Barcode format"><option value="CODE128">Code128</option><option value="QR">QR Code</option></select> <button id="bc-print-btn" class="btn btn-primary">🖨️ Print</button></div>' +
       '<div id="bc-item-list" class="bc-item-list"></div>';
 
     document.getElementById('bc-load-btn').addEventListener('click', loadItems);

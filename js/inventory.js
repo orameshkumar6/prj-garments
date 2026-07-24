@@ -537,16 +537,16 @@ var Inventory = (function () {
           '<option value="">All Types</option>' +
         '</select>' +
         '<button type="button" id="inv-btn-add" class="btn btn-primary">' +
-          'Add Item' +
+          '➕ Add Item' +
         '</button>' +
         '<button type="button" id="inv-btn-replenish" class="btn btn-secondary">' +
-          'Replenish Stock' +
+          '📦 Replenish' +
         '</button>' +
         '<button type="button" id="inv-btn-reorder-config" class="btn btn-secondary">' +
-          'Reorder Config' +
+          '🔄 Reorder' +
         '</button>' +
         '<button type="button" id="inv-btn-load-defaults" class="btn btn-secondary">' +
-          'Load Sample Items' +
+          '📥 Load Samples' +
         '</button>' +
       '</div>' +
       '<!-- Bulk Action Bar -->' +

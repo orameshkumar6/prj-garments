@@ -760,12 +760,12 @@ var MaterialRequest = (function () {
       html += '<td>' + Utils.escapeHtml(dateStr) + '</td>';
       html += '<td>' + itemCount + ' item(s)</td>';
       html += '<td><span class="status-badge ' + statusClass + '">' + Utils.escapeHtml(req.status || '') + '</span></td>';
-      html += '<td>';
+      html += '<td class="actions-cell">';
       if (req.status === 'Pending') {
-        html += '<button class="btn btn-sm btn-primary mr-approve-btn" data-id="' + Utils.escapeHtml(req.id) + '">Approve</button> ';
-        html += '<button class="btn btn-sm btn-danger mr-reject-btn" data-id="' + Utils.escapeHtml(req.id) + '">Reject</button>';
+        html += '<button class="btn-icon-sm btn-approve mr-approve-btn" data-id="' + Utils.escapeHtml(req.id) + '" aria-label="Approve request" title="Approve">✅</button>';
+        html += '<button class="btn-icon-sm btn-reject mr-reject-btn" data-id="' + Utils.escapeHtml(req.id) + '" aria-label="Reject request" title="Reject">❌</button>';
       } else if (req.status === 'Approved') {
-        html += '<button class="btn btn-sm btn-secondary mr-return-btn" data-id="' + Utils.escapeHtml(req.id) + '">Return</button>';
+        html += '<button class="btn-icon-sm btn-return mr-return-btn" data-id="' + Utils.escapeHtml(req.id) + '" aria-label="Return materials" title="Return">↩️</button>';
       } else {
         html += '-';
       }

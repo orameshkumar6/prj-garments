@@ -429,10 +429,10 @@ var Employee = (function () {
       html += '<td>' + esc(emp.phone || '') + '</td>';
       html += '<td>' + Utils.formatCurrency(emp.monthly_salary || 0) + '</td>';
       html += '<td><span class="status-badge ' + statusClass + '">' + statusText + '</span></td>';
-      html += '<td>';
-      html += '<button class="btn btn-secondary btn-sm emp-edit-btn" data-id="' + emp.id + '" type="button">Edit</button> ';
-      html += '<button class="btn btn-sm ' + (emp.active ? 'btn-danger' : 'btn-primary') + ' emp-toggle-btn" data-id="' + emp.id + '" data-active="' + emp.active + '" type="button">';
-      html += emp.active ? 'Deactivate' : 'Activate';
+      html += '<td class="actions-cell">';
+      html += '<button class="btn-icon-sm btn-edit emp-edit-btn" data-id="' + emp.id + '" type="button" aria-label="Edit employee" title="Edit">✏️</button>';
+      html += '<button class="btn-icon-sm ' + (emp.active ? 'btn-delete' : 'btn-approve') + ' emp-toggle-btn" data-id="' + emp.id + '" data-active="' + emp.active + '" type="button" aria-label="' + (emp.active ? 'Deactivate' : 'Activate') + ' employee" title="' + (emp.active ? 'Deactivate' : 'Activate') + '">';
+      html += emp.active ? '⛔' : '✅';
       html += '</button>';
       html += '</td>';
       html += '</tr>';

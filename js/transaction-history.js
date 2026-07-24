@@ -184,8 +184,8 @@ var TransactionHistory = (function () {
       html += '<td>' + esc(itemNames) + '</td>';
       html += '<td>' + esc(quantities) + '</td>';
       html += '<td>' + Utils.formatCurrency(tx.total || 0) + '</td>';
-      html += '<td><button class="btn btn-sm btn-danger history-delete-btn" ';
-      html += 'data-id="' + esc(tx.id || '') + '" type="button" aria-label="Delete transaction">Delete</button></td>';
+      html += '<td><button class="btn-icon-sm btn-delete history-delete-btn" ';
+      html += 'data-id="' + esc(tx.id || '') + '" type="button" aria-label="Delete transaction" title="Delete">🗑️</button></td>';
       html += '</tr>';
     }
 
