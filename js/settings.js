@@ -16,7 +16,10 @@ var Settings = (function () {
     store_name: '',
     store_address: '',
     store_phone: '',
-    bill_footer: 'Thank you for your purchase!'
+    bill_footer: 'Thank you for your purchase!',
+    upi_id: '',
+    merchant_name: '',
+    merchant_code: ''
   };
 
   var _initialized = false;
@@ -40,6 +43,9 @@ var Settings = (function () {
         _config.bill_footer = (typeof doc.bill_footer === 'string' && doc.bill_footer.length > 0)
           ? doc.bill_footer
           : 'Thank you for your purchase!';
+        _config.upi_id = doc.upi_id || '';
+        _config.merchant_name = doc.merchant_name || '';
+        _config.merchant_code = doc.merchant_code || '';
       }
     } catch (e) {
       // If Firestore read fails, use defaults
@@ -215,6 +221,77 @@ var Settings = (function () {
     }
   }
 
+  // ─── UPI Configuration ───────────────────────────────────────────────────
+
+  /**
+   * Returns the cached UPI payment configuration.
+   * @returns {{upi_id: string, merchant_name: string, merchant_code: string}}
+   */
+  function getUPIConfig() {
+    return {
+      upi_id: _config.upi_id,
+      merchant_name: _config.merchant_name,
+      merchant_code: _config.merchant_code
+    };
+  }
+
+  /**
+   * Validates and sets UPI payment configuration. Persists to Firestore.
+   * @param {{upi_id?: string, merchant_name?: string, merchant_code?: string}} config
+   * @returns {Promise<{success: boolean, error?: string}>}
+   */
+  async function setUPIConfig(config) {
+    if (!config || typeof config !== 'object') {
+      return { success: false, error: 'UPI config must be an object.' };
+    }
+
+    var upiId = (config.upi_id !== undefined) ? String(config.upi_id).trim() : _config.upi_id;
+    var merchantName = (config.merchant_name !== undefined) ? String(config.merchant_name).trim() : _config.merchant_name;
+    var merchantCode = (config.merchant_code !== undefined) ? String(config.merchant_code).trim() : _config.merchant_code;
+
+    // Validate upi_id format (xxx@provider) — only if non-empty
+    if (upiId.length > 0 && !/^[a-zA-Z0-9.\-_]+@[a-zA-Z0-9]+$/.test(upiId)) {
+      return { success: false, error: 'UPI ID must be in format: yourname@provider (e.g., shop@upi).' };
+    }
+
+    // Validate merchant_name (≤50 chars)
+    if (merchantName.length > 50) {
+      return { success: false, error: 'Merchant name must not exceed 50 characters.' };
+    }
+
+    // Validate merchant_code (≤20 chars)
+    if (merchantCode.length > 20) {
+      return { success: false, error: 'Merchant code must not exceed 20 characters.' };
+    }
+
+    try {
+      await DataLayer.updateDocument(CONFIG_COLLECTION, CONFIG_DOC_ID, {
+        upi_id: upiId,
+        merchant_name: merchantName,
+        merchant_code: merchantCode,
+        updated_at: new Date()
+      });
+      _config.upi_id = upiId;
+      _config.merchant_name = merchantName;
+      _config.merchant_code = merchantCode;
+      return { success: true };
+    } catch (e) {
+      try {
+        await _ensureConfigDoc({
+          upi_id: upiId,
+          merchant_name: merchantName,
+          merchant_code: merchantCode
+        });
+        _config.upi_id = upiId;
+        _config.merchant_name = merchantName;
+        _config.merchant_code = merchantCode;
+        return { success: true };
+      } catch (e2) {
+        return { success: false, error: 'Failed to save UPI config: ' + e2.message };
+      }
+    }
+  }
+
   // ─── Private Helpers ────────────────────────────────────────────────────────
 
   /**
@@ -230,6 +307,9 @@ var Settings = (function () {
       store_address: _config.store_address,
       store_phone: _config.store_phone,
       bill_footer: _config.bill_footer,
+      upi_id: _config.upi_id,
+      merchant_name: _config.merchant_name,
+      merchant_code: _config.merchant_code,
       updated_at: new Date()
     };
 
@@ -317,6 +397,32 @@ var Settings = (function () {
     html += 'maxlength="120" placeholder="Thank you for your purchase!" ';
     html += 'value="' + esc(_config.bill_footer) + '" />';
     html += '<small class="form-hint">Maximum 120 characters. Displayed at the bottom of printed bills.</small>';
+    html += '</div>';
+    html += '</div>';
+
+    // ── UPI Payment Configuration Section ──
+    html += '<div class="settings-section">';
+    html += '<h2 class="section-heading">UPI Payment Configuration</h2>';
+    html += '<div class="form-group">';
+    html += '<label for="settings-upi-id">UPI ID</label>';
+    html += '<input type="text" id="settings-upi-id" class="form-input" ';
+    html += 'placeholder="yourname@upi" ';
+    html += 'value="' + esc(_config.upi_id) + '" />';
+    html += '<small class="form-hint">Format: yourname@provider (e.g., shop@ybl)</small>';
+    html += '</div>';
+    html += '<div class="form-group">';
+    html += '<label for="settings-merchant-name">Merchant Name</label>';
+    html += '<input type="text" id="settings-merchant-name" class="form-input" ';
+    html += 'maxlength="50" placeholder="Store Name" ';
+    html += 'value="' + esc(_config.merchant_name) + '" />';
+    html += '<small class="form-hint">Maximum 50 characters</small>';
+    html += '</div>';
+    html += '<div class="form-group">';
+    html += '<label for="settings-merchant-code">Merchant Code</label>';
+    html += '<input type="text" id="settings-merchant-code" class="form-input" ';
+    html += 'maxlength="20" placeholder="Merchant Code" ';
+    html += 'value="' + esc(_config.merchant_code) + '" />';
+    html += '<small class="form-hint">Maximum 20 characters</small>';
     html += '</div>';
     html += '</div>';
 
@@ -430,6 +536,23 @@ var Settings = (function () {
         }
       }
 
+      // ── Save UPI Config ──
+      var upiIdInput = document.getElementById('settings-upi-id');
+      var merchantNameInput = document.getElementById('settings-merchant-name');
+      var merchantCodeInput = document.getElementById('settings-merchant-code');
+
+      var upiConfig = {};
+      if (upiIdInput) upiConfig.upi_id = upiIdInput.value;
+      if (merchantNameInput) upiConfig.merchant_name = merchantNameInput.value;
+      if (merchantCodeInput) upiConfig.merchant_code = merchantCodeInput.value;
+
+      var upiResult = await setUPIConfig(upiConfig);
+      if (!upiResult.success) {
+        toast(upiResult.error, 'error');
+        _restoreButton(saveBtn);
+        return;
+      }
+
       toast('Settings saved successfully!', 'success');
     } catch (e) {
       toast('An error occurred while saving settings.', 'error');
@@ -460,7 +583,9 @@ var Settings = (function () {
     getStoreInfo: getStoreInfo,
     setStoreInfo: setStoreInfo,
     getBillFooter: getBillFooter,
-    setBillFooter: setBillFooter
+    setBillFooter: setBillFooter,
+    getUPIConfig: getUPIConfig,
+    setUPIConfig: setUPIConfig
   };
 
 })();

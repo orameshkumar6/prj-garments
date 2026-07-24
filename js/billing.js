@@ -394,6 +394,12 @@ var Billing = (function () {
 
     var html = '';
 
+    // ── Barcode Scanner Input Section ──
+    html += '<div class="billing-section billing-barcode-section">';
+    html += '<input type="text" id="billing-barcode-input" class="form-input" ';
+    html += 'placeholder="Scan barcode or enter item code..." autofocus />';
+    html += '</div>';
+
     // ── Item Search/Add Section ──
     html += '<div class="billing-section billing-add">';
     html += '<h2 class="section-heading">Add Items to Bill</h2>';
@@ -441,6 +447,18 @@ var Billing = (function () {
     html += '<span>You Save:</span><span id="billing-savings">₹0.00</span></div>';
     html += '</div>';
 
+    // ── Payment Type Section ──
+    html += '<div class="billing-section billing-payment">';
+    html += '<div class="form-group">';
+    html += '<label>Payment Type</label>';
+    html += '<select id="billing-payment-type" class="form-input">';
+    html += '<option value="UPI" selected>UPI</option>';
+    html += '<option value="Cash">Cash</option>';
+    html += '<option value="Card">Card</option>';
+    html += '</select>';
+    html += '</div>';
+    html += '</div>';
+
     // ── Actions ──
     html += '<div class="billing-section billing-actions">';
     html += '<button id="billing-complete-btn" class="btn btn-primary" type="button">Complete Sale</button>';
@@ -465,6 +483,7 @@ var Billing = (function () {
     var completeBtn = document.getElementById('billing-complete-btn');
     var printBtn = document.getElementById('billing-print-btn');
     var clearBtn = document.getElementById('billing-clear-btn');
+    var barcodeInput = document.getElementById('billing-barcode-input');
 
     if (searchInput) {
       var debouncedSearch = Utils.debounce(_handleSearch, 300);
@@ -481,7 +500,7 @@ var Billing = (function () {
     }
 
     if (completeBtn) {
-      completeBtn.addEventListener('click', function () { completeSale(); });
+      completeBtn.addEventListener('click', function () { _handleCompleteSale(); });
     }
 
     if (printBtn) {
@@ -495,6 +514,34 @@ var Billing = (function () {
             if (confirmed) { clearBill(); }
           });
         }
+      });
+    }
+
+    // ── Barcode Input Listener ──
+    if (barcodeInput) {
+      var _barcodeDebounceTimer = null;
+
+      barcodeInput.addEventListener('keydown', function (e) {
+        if (e.key === 'Enter') {
+          e.preventDefault();
+          if (_barcodeDebounceTimer) {
+            clearTimeout(_barcodeDebounceTimer);
+            _barcodeDebounceTimer = null;
+          }
+          _handleBarcodeInput(barcodeInput.value.trim());
+        }
+      });
+
+      barcodeInput.addEventListener('input', function () {
+        if (_barcodeDebounceTimer) {
+          clearTimeout(_barcodeDebounceTimer);
+        }
+        _barcodeDebounceTimer = setTimeout(function () {
+          var val = barcodeInput.value.trim();
+          if (val.length > 0) {
+            _handleBarcodeInput(val);
+          }
+        }, 300);
       });
     }
   }
@@ -686,7 +733,8 @@ var Billing = (function () {
         rows += '<tr>';
         rows += '<td>' + (i + 1) + '</td>';
         rows += '<td>' + esc(item.item_type || item.item_code || '') + '</td>';
-        rows += '<td>' + item.quantity + '</td>';
+        rows += '<td><input type="number" class="billing-qty-input" data-index="' + i + '" ';
+        rows += 'min="1" value="' + item.quantity + '" /></td>';
         rows += '<td>' + Utils.formatCurrency(item.mrp) + '</td>';
         rows += '<td>' + Utils.formatCurrency(item.sales_price) + '</td>';
         rows += '<td>' + Utils.formatCurrency(item.line_total) + '</td>';
@@ -702,6 +750,22 @@ var Billing = (function () {
         removeBtns[j].addEventListener('click', function () {
           var idx = parseInt(this.getAttribute('data-index'), 10);
           removeLineItem(idx);
+        });
+      }
+
+      // Attach quantity change handlers
+      var qtyInputs = tbody.querySelectorAll('.billing-qty-input');
+      for (var k = 0; k < qtyInputs.length; k++) {
+        qtyInputs[k].addEventListener('change', function () {
+          var idx = parseInt(this.getAttribute('data-index'), 10);
+          var newQty = parseInt(this.value, 10);
+          if (!isNaN(newQty) && newQty > 0 && idx >= 0 && idx < _lineItems.length) {
+            _lineItems[idx].quantity = newQty;
+            _lineItems[idx].line_total = Utils.roundTo2(_lineItems[idx].sales_price * newQty);
+            _updateUI();
+          } else {
+            this.value = _lineItems[idx].quantity;
+          }
         });
       }
     }
@@ -735,6 +799,185 @@ var Billing = (function () {
     var printBtn = document.getElementById('billing-print-btn');
     if (completeBtn) completeBtn.disabled = (_lineItems.length === 0);
     if (printBtn) printBtn.disabled = (_lineItems.length === 0);
+  }
+
+  // ─── Barcode Input Handler ─────────────────────────────────────────────────
+
+  /**
+   * Handles barcode/item code input — searches by exact item_code match and auto-adds.
+   * @param {string} code - The scanned/entered item code
+   * @private
+   */
+  async function _handleBarcodeInput(code) {
+    if (!code) return;
+
+    var barcodeInput = document.getElementById('billing-barcode-input');
+
+    var items = [];
+    if (typeof DataLayer !== 'undefined' && DataLayer.queryDocuments) {
+      try {
+        items = await DataLayer.queryDocuments('items', {
+          where: [{ field: 'item_code', op: '==', value: code }]
+        });
+      } catch (e) {
+        items = [];
+      }
+    }
+
+    if (items.length === 0) {
+      Utils.showToast('Item not found: ' + code, 'error');
+    } else if (items.length === 1) {
+      var item = items[0];
+      var result = addLineItem(item, 1);
+      if (result.success) {
+        Utils.showToast('Added: ' + (item.item_type || '') + ' - ' + (item.brand || ''), 'success');
+      } else {
+        Utils.showToast(result.error, 'error');
+      }
+    } else {
+      Utils.showToast('Multiple items found for: ' + code, 'error');
+    }
+
+    // Clear input and refocus
+    if (barcodeInput) {
+      barcodeInput.value = '';
+      barcodeInput.focus();
+    }
+  }
+
+  // ─── Payment Type & UPI QR Code ──────────────────────────────────────────────
+
+  /**
+   * Handles the Complete Sale button — checks payment type and shows UPI QR if needed.
+   * @private
+   */
+  async function _handleCompleteSale() {
+    if (_lineItems.length === 0) {
+      Utils.showToast('Cannot complete sale: bill is empty.', 'error');
+      return;
+    }
+
+    var paymentTypeEl = document.getElementById('billing-payment-type');
+    var paymentType = paymentTypeEl ? paymentTypeEl.value : 'Cash';
+
+    if (paymentType === 'UPI') {
+      // Calculate total for QR
+      var gstRate = (typeof Settings !== 'undefined' && Settings.getGSTRate)
+        ? Settings.getGSTRate()
+        : 0;
+      var subtotal = calculateSubtotal();
+      var gstAmount = calculateGST(subtotal, gstRate);
+      var total = Utils.roundTo2(subtotal + gstAmount);
+      var billNumber = generateBillNumber();
+
+      _showUPIQRModal(total, billNumber);
+    } else {
+      // Cash or Card — proceed directly
+      await completeSale();
+    }
+  }
+
+  /**
+   * Shows a UPI QR code modal for payment.
+   * @param {number} total - Total amount for UPI payment
+   * @param {string} billNumber - Bill number for transaction note
+   * @private
+   */
+  function _showUPIQRModal(total, billNumber) {
+    var upiConfig = (typeof Settings !== 'undefined' && Settings.getUPIConfig)
+      ? Settings.getUPIConfig()
+      : { upi_id: '', merchant_name: '', merchant_code: '' };
+
+    if (!upiConfig.upi_id) {
+      Utils.showToast('UPI ID not configured. Please set it in Settings.', 'error');
+      // Fall back to direct sale
+      completeSale();
+      return;
+    }
+
+    // Build UPI intent string
+    var upiString = 'upi://pay?pa=' + encodeURIComponent(upiConfig.upi_id) +
+      '&pn=' + encodeURIComponent(upiConfig.merchant_name) +
+      '&mc=' + encodeURIComponent(upiConfig.merchant_code) +
+      '&am=' + encodeURIComponent(String(total)) +
+      '&cu=INR' +
+      '&tn=' + encodeURIComponent('Bill ' + billNumber);
+
+    // Create modal overlay
+    var overlay = document.createElement('div');
+    overlay.className = 'modal-overlay';
+    overlay.id = 'upi-qr-modal-overlay';
+
+    var modal = document.createElement('div');
+    modal.className = 'modal upi-qr-modal';
+
+    var html = '<h2>UPI Payment</h2>';
+    html += '<div class="upi-amount">' + Utils.formatCurrency(total) + '</div>';
+    html += '<div class="upi-bill-info">Bill: ' + Utils.escapeHtml(billNumber) + '</div>';
+    html += '<div id="upi-qr-container"></div>';
+    html += '<div class="upi-modal-actions">';
+    html += '<button id="upi-payment-complete-btn" class="btn btn-primary" type="button">Payment Complete</button>';
+    html += '<button id="upi-payment-cancel-btn" class="btn btn-secondary" type="button">Cancel</button>';
+    html += '</div>';
+
+    modal.innerHTML = html;
+    overlay.appendChild(modal);
+    document.body.appendChild(overlay);
+
+    // Generate QR code
+    var qrContainer = document.getElementById('upi-qr-container');
+    if (qrContainer && typeof QRCode !== 'undefined') {
+      // QRCode library from CDN: use QRCode.toCanvas or QRCode.toDataURL
+      if (QRCode.toCanvas) {
+        var canvas = document.createElement('canvas');
+        qrContainer.appendChild(canvas);
+        QRCode.toCanvas(canvas, upiString, { width: 250, margin: 2 }, function (error) {
+          if (error) {
+            console.error('QR generation error:', error);
+            qrContainer.innerHTML = '<p>QR Code generation failed.</p>';
+          }
+        });
+      } else if (QRCode.toDataURL) {
+        QRCode.toDataURL(upiString, { width: 250, margin: 2 }, function (error, url) {
+          if (error) {
+            qrContainer.innerHTML = '<p>QR Code generation failed.</p>';
+          } else {
+            var img = document.createElement('img');
+            img.src = url;
+            img.alt = 'UPI QR Code';
+            qrContainer.appendChild(img);
+          }
+        });
+      }
+    }
+
+    // Event listeners for modal buttons
+    var completePayBtn = document.getElementById('upi-payment-complete-btn');
+    var cancelPayBtn = document.getElementById('upi-payment-cancel-btn');
+
+    if (completePayBtn) {
+      completePayBtn.addEventListener('click', function () {
+        _closeUPIQRModal();
+        completeSale();
+      });
+    }
+
+    if (cancelPayBtn) {
+      cancelPayBtn.addEventListener('click', function () {
+        _closeUPIQRModal();
+      });
+    }
+  }
+
+  /**
+   * Closes and removes the UPI QR modal.
+   * @private
+   */
+  function _closeUPIQRModal() {
+    var overlay = document.getElementById('upi-qr-modal-overlay');
+    if (overlay) {
+      overlay.parentNode.removeChild(overlay);
+    }
   }
 
   // ─── Public API ─────────────────────────────────────────────────────────────

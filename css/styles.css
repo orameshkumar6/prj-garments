@@ -1200,6 +1200,134 @@ body {
 
 
 /* ============================================
+   Uniform Control Heights & Alignment
+   ============================================ */
+
+/* Uniform control heights */
+.btn,
+.btn-primary,
+.btn-secondary,
+.btn-danger,
+.form-input,
+input[type="text"],
+input[type="number"],
+input[type="date"],
+input[type="tel"],
+input[type="email"],
+input[type="file"],
+select,
+.inv-search-input,
+.inv-filter-select {
+  height: 44px;
+  line-height: 1.4;
+  vertical-align: middle;
+  box-sizing: border-box;
+}
+
+/* Toolbar alignment fix */
+.inv-toolbar,
+.barcode-toolbar,
+.report-date-controls,
+.billing-actions {
+  align-items: center;
+}
+
+/* ============================================
+   Dropdown/Select Text Visibility Fix
+   ============================================ */
+
+/* Dropdown/select text visibility fix */
+select,
+.form-input[type="select"],
+select option {
+  color: var(--color-text);
+  background-color: var(--color-surface);
+}
+
+[data-theme="dark"] select,
+[data-theme="dark"] select option {
+  color: var(--color-text);
+  background-color: var(--color-surface);
+}
+
+[data-theme="dark"] input,
+[data-theme="dark"] textarea {
+  color: var(--color-text);
+  background-color: var(--color-surface);
+  border-color: var(--color-border);
+}
+
+/* Ensure placeholder text is visible */
+[data-theme="dark"] input::placeholder,
+[data-theme="dark"] textarea::placeholder {
+  color: var(--color-text-secondary);
+}
+
+/* ============================================
+   UPI QR Modal Styles
+   ============================================ */
+
+.upi-qr-modal {
+  text-align: center;
+}
+
+.upi-qr-modal canvas,
+.upi-qr-modal img {
+  margin: 16px auto;
+  display: block;
+  max-width: 250px;
+}
+
+.upi-qr-modal .upi-amount {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: var(--color-primary);
+  margin: 12px 0;
+}
+
+.upi-qr-modal .upi-bill-info {
+  font-size: 0.875rem;
+  color: var(--color-text-secondary);
+  margin-bottom: 16px;
+}
+
+.upi-qr-modal .upi-modal-actions {
+  display: flex;
+  gap: 12px;
+  justify-content: center;
+  margin-top: 20px;
+}
+
+/* ============================================
+   Barcode Input Styles (Billing)
+   ============================================ */
+
+.billing-barcode-section {
+  margin-bottom: 16px;
+  padding: 12px 16px;
+  background-color: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
+}
+
+.billing-barcode-section .form-input {
+  font-size: 1rem;
+  font-weight: 500;
+}
+
+/* Editable quantity input in billing table */
+.billing-qty-input {
+  width: 60px;
+  height: 32px;
+  text-align: center;
+  font-size: 0.875rem;
+  border: 1px solid var(--color-border);
+  border-radius: 4px;
+  background-color: var(--color-surface);
+  color: var(--color-text);
+}
+
+/* ============================================
    Print Styles
    ============================================ */
 @media print {
