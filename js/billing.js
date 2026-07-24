@@ -10,6 +10,7 @@ var Billing = (function () {
 
   var _lineItems = [];
   var _billCounter = 0;
+  var _activeEmployees = [];
 
   // ─── Line Item Management ───────────────────────────────────────────────────
 
@@ -44,7 +45,8 @@ var Billing = (function () {
       mrp: mrp,
       sales_price: salesPrice,
       quantity: qty,
-      line_total: lineTotal
+      line_total: lineTotal,
+      employee_code: item.employee_code || ''
     });
 
     _updateUI();
@@ -186,7 +188,8 @@ var Billing = (function () {
           quantity: item.quantity,
           mrp: item.mrp,
           sales_price: item.sales_price,
-          line_total: item.line_total
+          line_total: item.line_total,
+          employee_code: item.employee_code || ''
         };
       }),
       totals: {
@@ -379,7 +382,22 @@ var Billing = (function () {
    * Includes: item search/select, line items table, running totals, complete sale button, print button.
    */
   function init() {
+    _loadActiveEmployees();
     _renderUI();
+  }
+
+  /**
+   * Loads active employees for the employee dropdown.
+   * @private
+   */
+  async function _loadActiveEmployees() {
+    if (typeof Employee !== 'undefined' && Employee.getActiveEmployees) {
+      try {
+        _activeEmployees = await Employee.getActiveEmployees();
+      } catch (e) {
+        _activeEmployees = [];
+      }
+    }
   }
 
   /**
@@ -428,7 +446,7 @@ var Billing = (function () {
     html += '<table class="data-table" id="billing-items-table">';
     html += '<thead><tr>';
     html += '<th>#</th><th>Item</th><th>Qty</th>';
-    html += '<th>MRP</th><th>Price</th><th>Total</th><th>Action</th>';
+    html += '<th>MRP</th><th>Price</th><th>Total</th><th>Employee</th><th>Action</th>';
     html += '</tr></thead>';
     html += '<tbody id="billing-items-body"></tbody>';
     html += '</table>';
@@ -738,6 +756,14 @@ var Billing = (function () {
         rows += '<td>' + Utils.formatCurrency(item.mrp) + '</td>';
         rows += '<td>' + Utils.formatCurrency(item.sales_price) + '</td>';
         rows += '<td>' + Utils.formatCurrency(item.line_total) + '</td>';
+        rows += '<td><select class="billing-emp-select" data-index="' + i + '" style="min-width:100px;height:32px;font-size:0.8125rem;">';
+        rows += '<option value="">--</option>';
+        for (var ei = 0; ei < _activeEmployees.length; ei++) {
+          var emp = _activeEmployees[ei];
+          var selected = (item.employee_code === emp.employee_code) ? ' selected' : '';
+          rows += '<option value="' + esc(emp.employee_code) + '"' + selected + '>' + esc(emp.employee_code + ' - ' + emp.name) + '</option>';
+        }
+        rows += '</select></td>';
         rows += '<td><button class="btn btn-sm btn-danger billing-remove-btn" ';
         rows += 'data-index="' + i + '" type="button">×</button></td>';
         rows += '</tr>';
@@ -765,6 +791,17 @@ var Billing = (function () {
             _updateUI();
           } else {
             this.value = _lineItems[idx].quantity;
+          }
+        });
+      }
+
+      // Attach employee select change handlers
+      var empSelects = tbody.querySelectorAll('.billing-emp-select');
+      for (var m = 0; m < empSelects.length; m++) {
+        empSelects[m].addEventListener('change', function () {
+          var idx = parseInt(this.getAttribute('data-index'), 10);
+          if (idx >= 0 && idx < _lineItems.length) {
+            _lineItems[idx].employee_code = this.value;
           }
         });
       }

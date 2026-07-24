@@ -76,6 +76,18 @@
                     </a>
                 </li>
                 <li>
+                    <a href="#employees" class="nav-item" data-screen="employees">
+                        <span class="nav-icon">👥</span>
+                        <span class="nav-label">Employees</span>
+                    </a>
+                </li>
+                <li>
+                    <a href="#attendance" class="nav-item" data-screen="attendance">
+                        <span class="nav-icon">📅</span>
+                        <span class="nav-label">Attendance</span>
+                    </a>
+                </li>
+                <li>
                     <a href="#barcode" class="nav-item" data-screen="barcode">
                         <span class="nav-icon">🏷️</span>
                         <span class="nav-label">Barcode Print</span>
@@ -161,6 +173,20 @@
                     </div>
                 </section>
 
+                <!-- Employee Master Screen -->
+                <section id="screen-employees" class="screen" aria-label="Employee Master" hidden>
+                    <div class="screen-content">
+                        <p class="placeholder-text">Employee module loading...</p>
+                    </div>
+                </section>
+
+                <!-- Attendance & Salary Screen -->
+                <section id="screen-attendance" class="screen" aria-label="Attendance & Salary" hidden>
+                    <div class="screen-content">
+                        <p class="placeholder-text">Attendance module loading...</p>
+                    </div>
+                </section>
+
                 <!-- Barcode Printing Screen -->
                 <section id="screen-barcode" class="screen" aria-label="Barcode Printing" hidden>
                     <div class="screen-content">
@@ -228,6 +254,8 @@
     <script src="js/expense.js"></script>
     <script src="js/material-request.js"></script>
     <script src="js/barcode-printer.js"></script>
+    <script src="js/employee.js"></script>
+    <script src="js/attendance.js"></script>
     <script src="js/import-export.js"></script>
     <script src="js/transaction-history.js"></script>
     <script src="js/app.js"></script>

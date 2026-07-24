@@ -9,7 +9,7 @@ var ExpenseTracker = (function () {
   // ─── Constants ──────────────────────────────────────────────────────────────
 
   var COLLECTION_EXPENSES = 'expenses';
-  var CATEGORIES = ['Operational', 'Raw Material', 'Miscellaneous'];
+  var CATEGORIES = ['Capital Expense', 'Salary', 'Bonus', 'Operational', 'Raw Material', 'Miscellaneous'];
   var MIN_AMOUNT = 0.01;
   var MAX_AMOUNT = 9999999.99;
   var MAX_DESCRIPTION_LENGTH = 200;
@@ -53,7 +53,7 @@ var ExpenseTracker = (function () {
     if (!expenseData.category || typeof expenseData.category !== 'string') {
       errors.push('Category is required.');
     } else if (CATEGORIES.indexOf(expenseData.category) === -1) {
-      errors.push('Category must be one of: Operational, Raw Material, Miscellaneous.');
+      errors.push('Category must be one of: ' + CATEGORIES.join(', ') + '.');
     }
 
     // date: not in the future
@@ -245,6 +245,9 @@ var ExpenseTracker = (function () {
               '<label for="exp-f-category">Category *</label>' +
               '<select id="exp-f-category" required aria-label="Expense category">' +
                 '<option value="">-- Select Category --</option>' +
+                '<option value="Capital Expense">Capital Expense</option>' +
+                '<option value="Salary">Salary</option>' +
+                '<option value="Bonus">Bonus</option>' +
                 '<option value="Operational">Operational</option>' +
                 '<option value="Raw Material">Raw Material</option>' +
                 '<option value="Miscellaneous">Miscellaneous</option>' +
@@ -272,6 +275,9 @@ var ExpenseTracker = (function () {
           '<input type="date" id="exp-filter-end" aria-label="Filter end date">' +
           '<select id="exp-filter-category" aria-label="Filter by category">' +
             '<option value="">All Categories</option>' +
+            '<option value="Capital Expense">Capital Expense</option>' +
+            '<option value="Salary">Salary</option>' +
+            '<option value="Bonus">Bonus</option>' +
             '<option value="Operational">Operational</option>' +
             '<option value="Raw Material">Raw Material</option>' +
             '<option value="Miscellaneous">Miscellaneous</option>' +

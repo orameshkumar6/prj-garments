@@ -231,6 +231,8 @@ async function initApp() {
     { name: 'Reports', ref: typeof Reports !== 'undefined' ? Reports : null },
     { name: 'ExpenseTracker', ref: typeof ExpenseTracker !== 'undefined' ? ExpenseTracker : null },
     { name: 'MaterialRequest', ref: typeof MaterialRequest !== 'undefined' ? MaterialRequest : null },
+    { name: 'Employee', ref: typeof Employee !== 'undefined' ? Employee : null },
+    { name: 'Attendance', ref: typeof Attendance !== 'undefined' ? Attendance : null },
     { name: 'BarcodePrinter', ref: typeof BarcodePrinter !== 'undefined' ? BarcodePrinter : null },
     { name: 'ImportExport', ref: typeof ImportExport !== 'undefined' ? ImportExport : null },
     { name: 'TransactionHistory', ref: typeof TransactionHistory !== 'undefined' ? TransactionHistory : null },

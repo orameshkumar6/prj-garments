@@ -479,8 +479,10 @@ var Reports = (function () {
 
     var salesTab = _createTab('sales-tab', 'Sold Items', true);
     var eosTab = _createTab('eos-tab', 'End of Sale', false);
+    var empTab = _createTab('emp-sales-tab', 'By Employee', false);
     tabNav.appendChild(salesTab);
     tabNav.appendChild(eosTab);
+    tabNav.appendChild(empTab);
     screen.appendChild(tabNav);
 
     // Date range controls
@@ -528,6 +530,13 @@ var Reports = (function () {
     eosContent.style.display = 'none';
     screen.appendChild(eosContent);
 
+    // By Employee content area
+    var empContent = document.createElement('div');
+    empContent.id = 'emp-sales-report-content';
+    empContent.className = 'report-panel';
+    empContent.style.display = 'none';
+    screen.appendChild(empContent);
+
     // RFQ / PO buttons
     var actionBar = document.createElement('div');
     actionBar.className = 'report-actions';
@@ -556,10 +565,13 @@ var Reports = (function () {
     poBtn.addEventListener('click', function () { _handleGenerateDoc('PO'); });
 
     salesTab.addEventListener('click', function () {
-      _switchTab('sales-tab', 'sales-report-content', 'eos-report-content');
+      _switchSalesTab('sales-tab', 'sales-report-content');
     });
     eosTab.addEventListener('click', function () {
-      _switchTab('eos-tab', 'eos-report-content', 'sales-report-content');
+      _switchSalesTab('eos-tab', 'eos-report-content');
+    });
+    empTab.addEventListener('click', function () {
+      _switchSalesTab('emp-sales-tab', 'emp-sales-report-content');
     });
   }
 
@@ -697,6 +709,39 @@ var Reports = (function () {
     if (hideBtn) hideBtn.style.display = 'none';
   }
 
+  /**
+   * Switches between sales report tabs (Sold Items / End of Sale / By Employee).
+   * @param {string} activeTabId - ID of the tab button to activate
+   * @param {string} showContentId - ID of the panel to show
+   * @private
+   */
+  function _switchSalesTab(activeTabId, showContentId) {
+    var panelIds = ['sales-report-content', 'eos-report-content', 'emp-sales-report-content'];
+    var activeTab = document.getElementById(activeTabId);
+
+    // Update tab button styles
+    if (activeTab) {
+      var tabNav = activeTab.parentNode;
+      if (tabNav) {
+        var allTabs = tabNav.querySelectorAll('.report-tab');
+        allTabs.forEach(function (tab) {
+          tab.classList.remove('active');
+          tab.setAttribute('aria-selected', 'false');
+        });
+      }
+      activeTab.classList.add('active');
+      activeTab.setAttribute('aria-selected', 'true');
+    }
+
+    // Show/hide panels
+    for (var i = 0; i < panelIds.length; i++) {
+      var panel = document.getElementById(panelIds[i]);
+      if (panel) {
+        panel.style.display = (panelIds[i] === showContentId) ? '' : 'none';
+      }
+    }
+  }
+
   // ─── Tab Switching ───────────────────────────────────────────────────────────
 
   /**
@@ -806,6 +851,9 @@ var Reports = (function () {
         eosContainer.innerHTML = eosHtml;
       }
     }
+
+    // Generate "By Employee" report
+    _handleGenerateByEmployeeReport(startDate, endDate);
   }
 
   /**
@@ -881,6 +929,136 @@ var Reports = (function () {
     }
     html += '</tbody></table></div>';
     container.innerHTML = html;
+  }
+
+  /**
+  /**
+   * Generates the "By Employee" sales report.
+   * Groups line items by employee_code and shows items sold count and total sales amount.
+   * @param {string} startDate
+   * @param {string} endDate
+   * @private
+   */
+  async function _handleGenerateByEmployeeReport(startDate, endDate) {
+    var container = document.getElementById('emp-sales-report-content');
+    if (!container) return;
+
+    var validation = _validateDateRange(startDate, endDate);
+    if (!validation.valid) {
+      container.innerHTML = '<p class="empty-state">' + Utils.escapeHtml(validation.error) + '</p>';
+      return;
+    }
+
+    try {
+      var transactions = await DataLayer.queryDocuments(COLLECTIONS.TRANSACTIONS, {
+        where: [
+          { field: 'date', op: '>=', value: validation.start },
+          { field: 'date', op: '<=', value: validation.end }
+        ]
+      });
+
+      if (!transactions || transactions.length === 0) {
+        container.innerHTML = '<p class="empty-state">No sales found for the selected period.</p>';
+        return;
+      }
+
+      // Group items by employee_code
+      var empMap = {};
+      for (var i = 0; i < transactions.length; i++) {
+        var txnItems = transactions[i].items || [];
+        for (var j = 0; j < txnItems.length; j++) {
+          var item = txnItems[j];
+          var empCode = item.employee_code || 'Unassigned';
+          if (!empMap[empCode]) {
+            empMap[empCode] = { items_sold: 0, total_amount: 0 };
+          }
+          empMap[empCode].items_sold += (item.qty || item.quantity || 0);
+          empMap[empCode].total_amount += (item.line_total || 0);
+        }
+      }
+
+      // Get employee names
+      var employees = [];
+      if (typeof Employee !== 'undefined' && Employee.getEmployees) {
+        employees = await Employee.getEmployees();
+      }
+      var empNameMap = {};
+      for (var k = 0; k < employees.length; k++) {
+        empNameMap[employees[k].employee_code] = employees[k].name;
+      }
+
+      // Build table
+      var keys = Object.keys(empMap);
+      if (keys.length === 0) {
+        container.innerHTML = '<p class="empty-state">No employee-wise data found.</p>';
+        return;
+      }
+
+      var html = '<div class="table-wrapper"><table class="data-table" id="emp-sales-table"><thead><tr>';
+      html += '<th>Employee Code</th><th>Employee Name</th><th>Items Sold</th><th>Total Sales</th>';
+      html += '</tr></thead><tbody>';
+
+      for (var m = 0; m < keys.length; m++) {
+        var code = keys[m];
+        var data = empMap[code];
+        var empName = empNameMap[code] || (code === 'Unassigned' ? '(Unassigned)' : 'Unknown');
+        html += '<tr>';
+        html += '<td>' + Utils.escapeHtml(code) + '</td>';
+        html += '<td>' + Utils.escapeHtml(empName) + '</td>';
+        html += '<td>' + data.items_sold + '</td>';
+        html += '<td>' + Utils.formatCurrency(data.total_amount) + '</td>';
+        html += '</tr>';
+      }
+
+      html += '</tbody></table></div>';
+      html += '<div class="mt-16"><button type="button" class="btn btn-secondary" id="emp-sales-print-btn">Print Report</button></div>';
+      container.innerHTML = html;
+
+      // Attach print handler
+      var printBtn = document.getElementById('emp-sales-print-btn');
+      if (printBtn) {
+        printBtn.addEventListener('click', function () {
+          _printEmployeeSalesReport(startDate, endDate);
+        });
+      }
+    } catch (e) {
+      container.innerHTML = '<p class="empty-state">Error: ' + Utils.escapeHtml(e.message) + '</p>';
+    }
+  }
+
+  /**
+   * Prints the employee sales report.
+   * @param {string} startDate
+   * @param {string} endDate
+   * @private
+   */
+  function _printEmployeeSalesReport(startDate, endDate) {
+    var table = document.getElementById('emp-sales-table');
+    if (!table) {
+      Utils.showToast('No report to print.', 'error');
+      return;
+    }
+
+    var dateRange = startDate + ' to ' + endDate;
+    var printHtml = '<!DOCTYPE html><html><head><meta charset="UTF-8">';
+    printHtml += '<title>Sales By Employee Report</title>';
+    printHtml += '<style>body{font-family:sans-serif;font-size:12px;margin:20px;}';
+    printHtml += 'table{width:100%;border-collapse:collapse;}';
+    printHtml += 'th,td{border:1px solid #ccc;padding:6px 8px;text-align:left;}';
+    printHtml += 'th{background:#f0f0f0;font-weight:bold;}';
+    printHtml += 'h2{margin-bottom:4px;}p{margin:4px 0;}</style></head><body>';
+    printHtml += '<h2>Sales By Employee Report</h2>';
+    printHtml += '<p>Period: ' + Utils.escapeHtml(dateRange) + '</p>';
+    printHtml += table.outerHTML;
+    printHtml += '</body></html>';
+
+    var printWindow = window.open('', '_blank', 'width=800,height=600');
+    if (printWindow) {
+      printWindow.document.write(printHtml);
+      printWindow.document.close();
+      printWindow.focus();
+      printWindow.print();
+    }
   }
 
   /**
