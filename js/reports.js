@@ -670,13 +670,16 @@ var Reports = (function () {
    */
   function _switchStockTab(activeTabId, showContentId, hideContentId, showBtnId, hideBtnId) {
     // Update tab styles
-    var tabs = document.querySelectorAll('.report-tab');
-    tabs.forEach(function(tab) {
-      tab.classList.remove('active');
-      tab.setAttribute('aria-selected', 'false');
-    });
     var activeTab = document.getElementById(activeTabId);
     if (activeTab) {
+      var tabNav = activeTab.parentNode;
+      if (tabNav) {
+        var tabs = tabNav.querySelectorAll('.report-tab');
+        tabs.forEach(function(tab) {
+          tab.classList.remove('active');
+          tab.setAttribute('aria-selected', 'false');
+        });
+      }
       activeTab.classList.add('active');
       activeTab.setAttribute('aria-selected', 'true');
     }
@@ -684,14 +687,226 @@ var Reports = (function () {
     // Show/hide content
     var showContent = document.getElementById(showContentId);
     var hideContent = document.getElementById(hideContentId);
-    if (showContent) showContent.hidden = false;
-    if (hideContent) hideContent.hidden = true;
+    if (showContent) showContent.style.display = '';
+    if (hideContent) hideContent.style.display = 'none';
 
     // Show/hide buttons
     var showBtn = document.getElementById(showBtnId);
     var hideBtn = document.getElementById(hideBtnId);
-    if (showBtn) showBtn.hidden = false;
-    if (hideBtn) hideBtn.hidden = true;
+    if (showBtn) showBtn.style.display = '';
+    if (hideBtn) hideBtn.style.display = 'none';
+  }
+
+  // ─── Tab Switching ───────────────────────────────────────────────────────────
+
+  /**
+   * Switches between sales report tabs (Sold Items / End of Sale).
+   * @param {string} activeTabId - ID of the tab button to activate
+   * @param {string} showContentId - ID of the panel to show
+   * @param {string} hideContentId - ID of the panel to hide
+   * @private
+   */
+  function _switchTab(activeTabId, showContentId, hideContentId) {
+    // Update tab button styles within the same parent
+    var activeTab = document.getElementById(activeTabId);
+    if (activeTab) {
+      var tabNav = activeTab.parentNode;
+      if (tabNav) {
+        var allTabs = tabNav.querySelectorAll('.report-tab');
+        allTabs.forEach(function (tab) {
+          tab.classList.remove('active');
+          tab.setAttribute('aria-selected', 'false');
+        });
+      }
+      activeTab.classList.add('active');
+      activeTab.setAttribute('aria-selected', 'true');
+    }
+
+    // Show/hide content panels
+    var showContent = document.getElementById(showContentId);
+    var hideContent = document.getElementById(hideContentId);
+    if (showContent) { showContent.style.display = ''; }
+    if (hideContent) { hideContent.style.display = 'none'; }
+  }
+
+  // ─── Event Handlers ─────────────────────────────────────────────────────────
+
+  /**
+   * Handles the "Generate Report" button for sales report.
+   * Reads date inputs, calls getSalesReport/getEndOfSaleReport, and renders results.
+   * @private
+   */
+  async function _handleGenerateSalesReport() {
+    var startInput = document.getElementById('sales-start-date');
+    var endInput = document.getElementById('sales-end-date');
+
+    if (!startInput || !startInput.value || !endInput || !endInput.value) {
+      Utils.showToast('Please select both start and end dates.', 'error');
+      return;
+    }
+
+    var startDate = startInput.value;
+    var endDate = endInput.value;
+
+    // Generate sold items report
+    var salesResult = await getSalesReport(startDate, endDate);
+    var salesContainer = document.getElementById('sales-report-content');
+    if (salesContainer) {
+      if (!salesResult.success) {
+        salesContainer.innerHTML = '<p class="empty-state">' + Utils.escapeHtml(salesResult.error || 'Error') + '</p>';
+      } else if (!salesResult.items || salesResult.items.length === 0) {
+        salesContainer.innerHTML = '<p class="empty-state">' + Utils.escapeHtml(salesResult.message || 'No sales found.') + '</p>';
+      } else {
+        var html = '<div class="table-wrapper"><table class="data-table"><thead><tr>';
+        html += '<th>Item Code</th><th>Item Name</th><th>Qty Sold</th><th>Selling Price</th>';
+        html += '</tr></thead><tbody>';
+        for (var i = 0; i < salesResult.items.length; i++) {
+          var item = salesResult.items[i];
+          html += '<tr>';
+          html += '<td>' + Utils.escapeHtml(item.item_code || '') + '</td>';
+          html += '<td>' + Utils.escapeHtml(item.item_name || '') + '</td>';
+          html += '<td>' + (item.total_qty_sold || 0) + '</td>';
+          html += '<td>' + Utils.formatCurrency(item.selling_price) + '</td>';
+          html += '</tr>';
+        }
+        html += '</tbody></table></div>';
+        salesContainer.innerHTML = html;
+
+        // Show RFQ/PO action buttons
+        var actionsBar = document.getElementById('sales-report-actions');
+        if (actionsBar) actionsBar.style.display = '';
+      }
+    }
+
+    // Generate end-of-sale report
+    var eosResult = await getEndOfSaleReport(startDate, endDate);
+    var eosContainer = document.getElementById('eos-report-content');
+    if (eosContainer) {
+      if (!eosResult.success) {
+        eosContainer.innerHTML = '<p class="empty-state">' + Utils.escapeHtml(eosResult.error || 'Error') + '</p>';
+      } else {
+        var eosHtml = '<div class="eos-summary">';
+        eosHtml += '<p><strong>Total Transactions:</strong> ' + (eosResult.total_transactions || 0) + '</p>';
+        eosHtml += '<p><strong>Total Revenue:</strong> ' + Utils.formatCurrency(eosResult.total_revenue || 0) + '</p>';
+        eosHtml += '</div>';
+        if (eosResult.items_sold && eosResult.items_sold.length > 0) {
+          eosHtml += '<div class="table-wrapper"><table class="data-table"><thead><tr>';
+          eosHtml += '<th>Item Code</th><th>Item Name</th><th>Total Qty Sold</th>';
+          eosHtml += '</tr></thead><tbody>';
+          for (var j = 0; j < eosResult.items_sold.length; j++) {
+            var eosItem = eosResult.items_sold[j];
+            eosHtml += '<tr>';
+            eosHtml += '<td>' + Utils.escapeHtml(eosItem.item_code || '') + '</td>';
+            eosHtml += '<td>' + Utils.escapeHtml(eosItem.item_name || '') + '</td>';
+            eosHtml += '<td>' + (eosItem.total_qty_sold || 0) + '</td>';
+            eosHtml += '</tr>';
+          }
+          eosHtml += '</tbody></table></div>';
+        }
+        eosContainer.innerHTML = eosHtml;
+      }
+    }
+  }
+
+  /**
+   * Handles the "Generate Stock Report" button.
+   * @private
+   */
+  async function _handleGenerateStockReport() {
+    var container = document.getElementById('stock-report-content');
+    if (!container) return;
+
+    var result = await getStockVerificationReport();
+    if (!result.success) {
+      container.innerHTML = '<p class="empty-state">' + Utils.escapeHtml(result.error || 'Error') + '</p>';
+      return;
+    }
+
+    if (!result.items || result.items.length === 0) {
+      container.innerHTML = '<p class="empty-state">' + Utils.escapeHtml(result.message || 'No items found.') + '</p>';
+      return;
+    }
+
+    var html = '<div class="table-wrapper"><table class="data-table"><thead><tr>';
+    html += '<th>Code</th><th>Type</th><th>Brand</th><th>Qty</th><th>Reorder Level</th><th>Status</th>';
+    html += '</tr></thead><tbody>';
+    for (var i = 0; i < result.items.length; i++) {
+      var item = result.items[i];
+      var statusClass = item.status === 'Out of Stock' ? 'danger' : (item.status === 'Low Stock' ? 'warning' : 'success');
+      html += '<tr>';
+      html += '<td>' + Utils.escapeHtml(item.item_code || '') + '</td>';
+      html += '<td>' + Utils.escapeHtml(item.category || '') + '</td>';
+      html += '<td>' + Utils.escapeHtml(item.brand || '') + '</td>';
+      html += '<td>' + item.quantity + '</td>';
+      html += '<td>' + (item.reorder_level || '-') + '</td>';
+      html += '<td><span class="status-badge ' + statusClass + '">' + Utils.escapeHtml(item.status) + '</span></td>';
+      html += '</tr>';
+    }
+    html += '</tbody></table></div>';
+    container.innerHTML = html;
+  }
+
+  /**
+   * Handles the "Generate Reorder Report" button.
+   * @private
+   */
+  async function _handleGenerateReorderReport() {
+    var container = document.getElementById('reorder-report-content');
+    if (!container) return;
+
+    var result = await getReorderReport();
+    if (!result.success) {
+      container.innerHTML = '<p class="empty-state">' + Utils.escapeHtml(result.error || 'Error') + '</p>';
+      return;
+    }
+
+    if (!result.items || result.items.length === 0) {
+      container.innerHTML = '<p class="empty-state">No items require reorder at this time.</p>';
+      return;
+    }
+
+    var html = '<div class="table-wrapper"><table class="data-table"><thead><tr>';
+    html += '<th>Code</th><th>Category</th><th>Brand</th><th>Qty</th><th>Reorder Level</th><th>Reorder Qty</th>';
+    html += '</tr></thead><tbody>';
+    for (var i = 0; i < result.items.length; i++) {
+      var item = result.items[i];
+      html += '<tr>';
+      html += '<td>' + Utils.escapeHtml(item.item_code || '') + '</td>';
+      html += '<td>' + Utils.escapeHtml(item.category || '') + '</td>';
+      html += '<td>' + Utils.escapeHtml(item.brand || '') + '</td>';
+      html += '<td>' + item.quantity + '</td>';
+      html += '<td>' + item.reorder_level + '</td>';
+      html += '<td>' + (item.reorder_qty || '-') + '</td>';
+      html += '</tr>';
+    }
+    html += '</tbody></table></div>';
+    container.innerHTML = html;
+  }
+
+  /**
+   * Handles RFQ/PO document generation.
+   * @param {string} docType - 'RFQ' or 'PO'
+   * @private
+   */
+  async function _handleGenerateDoc(docType) {
+    if (!_salesReportData || _salesReportData.length === 0) {
+      Utils.showToast('Generate a sales report first before creating ' + docType + '.', 'error');
+      return;
+    }
+
+    var doc = (docType === 'RFQ') ? generateRFQ(_salesReportData) : generatePO(_salesReportData);
+    if (!doc.success) {
+      Utils.showToast(doc.error || 'Failed to generate ' + docType + '.', 'error');
+      return;
+    }
+
+    // Save the document to Firestore
+    var saveResult = await saveDocument(docType, doc.line_items);
+    if (saveResult.success) {
+      Utils.showToast(docType + ' ' + saveResult.doc_number + ' saved successfully.', 'success');
+    } else {
+      Utils.showToast(saveResult.error || 'Failed to save ' + docType + '.', 'error');
+    }
   }
 
   // ─── Public API ─────────────────────────────────────────────────────────────

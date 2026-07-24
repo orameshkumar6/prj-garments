@@ -331,11 +331,10 @@ var Settings = (function () {
     if (typeof ThemeEngine !== 'undefined' && ThemeEngine.getThemes) {
       var themes = ThemeEngine.getThemes();
       var currentTheme = ThemeEngine.getCurrentTheme ? ThemeEngine.getCurrentTheme() : '';
-      var themeKeys = Object.keys(themes);
-      for (var i = 0; i < themeKeys.length; i++) {
-        var t = themes[themeKeys[i]];
+      for (var i = 0; i < themes.length; i++) {
+        var t = themes[i];
         var selected = (t.id === currentTheme) ? ' selected' : '';
-        html += '<option value="' + esc(t.id) + '"' + selected + '>' + esc(t.label) + '</option>';
+        html += '<option value="' + esc(t.id) + '"' + selected + '>' + esc(t.name) + '</option>';
       }
     } else {
       html += '<option value="light">Light</option>';

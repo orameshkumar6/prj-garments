@@ -716,7 +716,7 @@ var MaterialRequest = (function () {
    * @private
    */
   async function _loadRequests() {
-    var listContainer = document.getElementById('mr-requests-list');
+    var listContainer = document.getElementById('mr-request-list');
     if (!listContainer) return;
 
     try {
@@ -829,8 +829,8 @@ var MaterialRequest = (function () {
 
     var returnItems = req.items.map(function(item) {
       var outstanding = (item.qty_requested || 0) - (item.qty_returned || 0);
-      return { item_code: item.item_code, quantity: outstanding };
-    }).filter(function(item) { return item.quantity > 0; });
+      return { item_code: item.item_code, qty_returned: outstanding };
+    }).filter(function(item) { return item.qty_returned > 0; });
 
     if (returnItems.length === 0) { Utils.showToast('Nothing to return.', 'info'); return; }
 
