@@ -268,7 +268,8 @@ body {
   flex-direction: column;
   min-height: 100vh;
   min-height: 100dvh;
-  overflow-y: auto;
+  overflow-y: auto;  /* THIS is the scroll container */
+  overflow-x: hidden;
 }
 
 /* --- Top Bar (Mobile) --- */
@@ -338,6 +339,7 @@ body {
 .content-area {
   padding: 24px;
   flex: 1;
+  min-height: 0;  /* Allow flex child to shrink and enable parent scroll */
 }
 
 
@@ -795,6 +797,9 @@ body {
   /* Main content full width */
   .main-content {
     margin-left: 0;
+    overflow-y: auto;
+    height: 100vh;
+    height: 100dvh;
   }
 
   /* Content area padding reduced */

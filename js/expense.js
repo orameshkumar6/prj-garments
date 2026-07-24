@@ -72,6 +72,25 @@ var ExpenseTracker = (function () {
       }
     }
 
+    // gst_amount: optional, number >= 0 (only relevant for Raw Material)
+    if (expenseData.gst_amount !== undefined && expenseData.gst_amount !== null &&
+        expenseData.gst_amount !== '') {
+      var gstAmount = Number(expenseData.gst_amount);
+      if (isNaN(gstAmount) || gstAmount < 0) {
+        errors.push('GST Amount must be a number >= 0.');
+      }
+    }
+
+    // additional_info: optional, string <= 200 characters
+    if (expenseData.additional_info !== undefined && expenseData.additional_info !== null &&
+        expenseData.additional_info !== '') {
+      if (typeof expenseData.additional_info !== 'string') {
+        errors.push('Additional Info must be a string.');
+      } else if (expenseData.additional_info.length > 200) {
+        errors.push('Additional Info must not exceed 200 characters.');
+      }
+    }
+
     return { valid: errors.length === 0, errors: errors };
   }
 
@@ -96,6 +115,16 @@ var ExpenseTracker = (function () {
         category: expenseData.category,
         created_at: new Date().toISOString()
       };
+
+      // Include Raw Material specific fields
+      if (expenseData.category === 'Raw Material') {
+        docData.gst_amount = (expenseData.gst_amount !== undefined &&
+          expenseData.gst_amount !== null && expenseData.gst_amount !== '')
+          ? Utils.roundTo2(Number(expenseData.gst_amount)) : 0;
+        docData.additional_info = (expenseData.additional_info &&
+          typeof expenseData.additional_info === 'string')
+          ? expenseData.additional_info.trim() : '';
+      }
 
       var docId = await DataLayer.addDocument(COLLECTION_EXPENSES, docData);
       return { success: true, id: docId };
@@ -255,6 +284,21 @@ var ExpenseTracker = (function () {
               '<span class="field-error" id="exp-err-category"></span>' +
             '</div>' +
           '</div>' +
+          '<!-- Raw Material optional fields -->' +
+          '<div id="exp-raw-material-fields" style="display:none;">' +
+            '<div class="form-grid">' +
+              '<div class="form-row">' +
+                '<label for="exp-f-gst">GST Amount (₹)</label>' +
+                '<input type="number" id="exp-f-gst" min="0" step="0.01" ' +
+                  'placeholder="0.00" aria-label="GST Amount">' +
+              '</div>' +
+              '<div class="form-row">' +
+                '<label for="exp-f-additional-info">Additional Info</label>' +
+                '<input type="text" id="exp-f-additional-info" maxlength="200" ' +
+                  'placeholder="Vendor name, invoice number, etc." aria-label="Additional Info">' +
+              '</div>' +
+            '</div>' +
+          '</div>' +
           '<div class="form-actions">' +
             '<button type="submit" class="btn btn-primary">Add Expense</button>' +
           '</div>' +
@@ -287,7 +331,7 @@ var ExpenseTracker = (function () {
         '<div class="exp-table-container" role="region" aria-label="Expenses table" tabindex="0">' +
           '<table class="exp-table" id="exp-table">' +
             '<thead><tr>' +
-              '<th>Date</th><th>Description</th><th>Category</th><th>Amount</th>' +
+              '<th>Date</th><th>Description</th><th>Category</th><th>Amount</th><th>GST</th><th>Info</th>' +
             '</tr></thead>' +
             '<tbody id="exp-tbody"></tbody>' +
           '</table>' +
@@ -327,6 +371,17 @@ var ExpenseTracker = (function () {
       });
     }
 
+    // Category change: show/hide Raw Material fields
+    var categorySelect = document.getElementById('exp-f-category');
+    if (categorySelect) {
+      categorySelect.addEventListener('change', function () {
+        var rawMaterialFields = document.getElementById('exp-raw-material-fields');
+        if (rawMaterialFields) {
+          rawMaterialFields.style.display = (categorySelect.value === 'Raw Material') ? 'block' : 'none';
+        }
+      });
+    }
+
     // Filter button
     var filterBtn = document.getElementById('exp-btn-filter');
     if (filterBtn) {
@@ -352,11 +407,22 @@ var ExpenseTracker = (function () {
       category: document.getElementById('exp-f-category').value
     };
 
+    // Include Raw Material fields if category is Raw Material
+    if (expenseData.category === 'Raw Material') {
+      var gstInput = document.getElementById('exp-f-gst');
+      var infoInput = document.getElementById('exp-f-additional-info');
+      expenseData.gst_amount = gstInput ? gstInput.value : '';
+      expenseData.additional_info = infoInput ? infoInput.value : '';
+    }
+
     var result = await addExpense(expenseData);
 
     if (result.success) {
       Utils.showToast('Expense added successfully.', 'success');
       document.getElementById('exp-add-form').reset();
+      // Hide Raw Material fields after reset
+      var rawMaterialFields = document.getElementById('exp-raw-material-fields');
+      if (rawMaterialFields) rawMaterialFields.style.display = 'none';
       // Update the date max attribute in case day changed
       var dateInput = document.getElementById('exp-f-date');
       if (dateInput) dateInput.setAttribute('max', _getTodayString());
@@ -454,11 +520,17 @@ var ExpenseTracker = (function () {
     var html = '';
     for (var i = 0; i < expenses.length; i++) {
       var exp = expenses[i];
+      var gstDisplay = (exp.category === 'Raw Material' && exp.gst_amount !== undefined)
+        ? Utils.formatCurrency(exp.gst_amount) : '-';
+      var infoDisplay = (exp.category === 'Raw Material' && exp.additional_info)
+        ? Utils.escapeHtml(exp.additional_info) : '-';
       html += '<tr>' +
         '<td>' + Utils.escapeHtml(Utils.formatDate(exp.date)) + '</td>' +
         '<td>' + Utils.escapeHtml(exp.description || '') + '</td>' +
         '<td>' + Utils.escapeHtml(exp.category || '') + '</td>' +
         '<td>' + Utils.formatCurrency(exp.amount) + '</td>' +
+        '<td>' + gstDisplay + '</td>' +
+        '<td>' + infoDisplay + '</td>' +
       '</tr>';
     }
     tbody.innerHTML = html;
