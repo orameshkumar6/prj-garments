@@ -161,10 +161,12 @@ var Utils = (function () {
       // Create overlay
       var overlay = document.createElement('div');
       overlay.className = 'confirm-overlay';
+      overlay.style.cssText = 'position:fixed;inset:0;z-index:99999;background:rgba(0,0,0,0.5);display:flex;align-items:center;justify-content:center;padding:24px;';
 
       // Create dialog
       var dialog = document.createElement('div');
       dialog.className = 'confirm-dialog';
+      dialog.style.cssText = 'background:var(--color-surface,#fff);border-radius:8px;padding:24px;max-width:400px;width:100%;box-shadow:0 8px 32px rgba(0,0,0,0.3);';
       dialog.setAttribute('role', 'alertdialog');
       dialog.setAttribute('aria-modal', 'true');
       dialog.setAttribute('aria-labelledby', 'confirm-msg');
@@ -179,16 +181,19 @@ var Utils = (function () {
       // Buttons container
       var btnContainer = document.createElement('div');
       btnContainer.className = 'confirm-buttons';
+      btnContainer.style.cssText = 'display:flex;gap:12px;justify-content:flex-end;margin-top:16px;';
 
       var cancelBtn = document.createElement('button');
       cancelBtn.className = 'confirm-btn confirm-btn-cancel';
       cancelBtn.textContent = 'Cancel';
       cancelBtn.type = 'button';
+      cancelBtn.style.cssText = 'padding:10px 20px;border:1px solid #ccc;border-radius:6px;background:#fff;color:#333;cursor:pointer;font-size:14px;';
 
       var confirmBtn = document.createElement('button');
       confirmBtn.className = 'confirm-btn confirm-btn-confirm';
       confirmBtn.textContent = 'Confirm';
       confirmBtn.type = 'button';
+      confirmBtn.style.cssText = 'padding:10px 20px;border:none;border-radius:6px;background:var(--color-primary,#6200ea);color:#fff;cursor:pointer;font-size:14px;';
 
       btnContainer.appendChild(cancelBtn);
       btnContainer.appendChild(confirmBtn);
