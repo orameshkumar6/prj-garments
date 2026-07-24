@@ -96,6 +96,7 @@ function setupSidebarToggle() {
     }
     if (sidebarBackdrop) {
       sidebarBackdrop.removeAttribute('hidden');
+      sidebarBackdrop.classList.add('visible');
     }
   }
 
@@ -104,6 +105,7 @@ function setupSidebarToggle() {
       sidebar.classList.remove('open');
     }
     if (sidebarBackdrop) {
+      sidebarBackdrop.classList.remove('visible');
       sidebarBackdrop.setAttribute('hidden', '');
     }
   }

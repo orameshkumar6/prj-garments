@@ -576,7 +576,7 @@ body {
 .modal-overlay {
   position: fixed;
   inset: 0;
-  z-index: 8000;
+  z-index: 9500;
   background-color: rgba(0, 0, 0, 0.5);
   display: flex;
   align-items: center;
