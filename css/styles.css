@@ -1398,3 +1398,158 @@ select option {
     color: #000000;
   }
 }
+
+
+/* ============================================
+   UI Enhancement: Compact Buttons
+   ============================================ */
+
+/* Smaller, more compact action buttons for tables */
+.btn-sm {
+  height: 32px;
+  min-height: 32px;
+  min-width: 32px;
+  padding: 4px 12px;
+  font-size: 0.8125rem;
+  border-radius: 6px;
+  gap: 4px;
+}
+
+/* Icon-only buttons in tables */
+.btn-icon-sm {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  min-width: 32px;
+  min-height: 32px;
+  padding: 0;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 1rem;
+  transition: background-color 0.15s, transform 0.1s;
+}
+
+.btn-icon-sm:hover {
+  transform: scale(1.1);
+}
+
+.btn-icon-sm.edit {
+  background-color: rgba(98, 0, 234, 0.1);
+  color: var(--color-primary);
+}
+
+.btn-icon-sm.edit:hover {
+  background-color: rgba(98, 0, 234, 0.2);
+}
+
+.btn-icon-sm.delete {
+  background-color: rgba(211, 47, 47, 0.1);
+  color: var(--color-error);
+}
+
+.btn-icon-sm.delete:hover {
+  background-color: rgba(211, 47, 47, 0.2);
+}
+
+/* ============================================
+   UI Enhancement: Richer Data Tables
+   ============================================ */
+
+/* Alternating row colors */
+.data-table tbody tr:nth-child(even) td {
+  background-color: rgba(0, 0, 0, 0.02);
+}
+
+[data-theme="dark"] .data-table tbody tr:nth-child(even) td {
+  background-color: rgba(255, 255, 255, 0.03);
+}
+
+/* Table cells: add more vertical padding for breathing room */
+.data-table th,
+.data-table td {
+  padding: 10px 14px;
+}
+
+/* Actions column: flex row for icon buttons */
+.data-table .actions-cell {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+}
+
+/* Checkbox column */
+.data-table .check-cell {
+  width: 40px;
+  text-align: center;
+}
+
+.data-table .check-cell input[type="checkbox"] {
+  width: 18px;
+  height: 18px;
+  cursor: pointer;
+  accent-color: var(--color-primary);
+}
+
+/* ============================================
+   UI Enhancement: Section Cards
+   ============================================ */
+
+.section-card {
+  background-color: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
+  padding: 20px;
+  margin-bottom: 20px;
+}
+
+.section-card h2,
+.section-card h3 {
+  margin-bottom: 16px;
+  color: var(--color-text);
+}
+
+/* ============================================
+   UI Enhancement: Toolbar & Bulk Actions
+   ============================================ */
+
+.toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  align-items: center;
+  padding: 12px 16px;
+  background-color: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
+  margin-bottom: 16px;
+}
+
+/* Bulk action bar (shown when items selected) */
+.bulk-action-bar {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 16px;
+  background-color: var(--color-primary);
+  color: #ffffff;
+  border-radius: var(--radius);
+  margin-bottom: 12px;
+  font-size: 0.875rem;
+}
+
+.bulk-action-bar .bulk-count {
+  font-weight: 600;
+}
+
+.bulk-action-bar .btn {
+  background-color: rgba(255,255,255,0.2);
+  color: #ffffff;
+  border: 1px solid rgba(255,255,255,0.3);
+}
+
+.bulk-action-bar .btn:hover {
+  background-color: rgba(255,255,255,0.3);
+}

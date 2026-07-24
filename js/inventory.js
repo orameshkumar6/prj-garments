@@ -529,7 +529,7 @@ var Inventory = (function () {
     return '' +
       '<h2 class="screen-title">Inventory Management</h2>' +
       '<!-- Search and Filter Bar -->' +
-      '<div class="inv-toolbar">' +
+      '<div class="inv-toolbar toolbar">' +
         '<input type="text" id="inv-search" class="inv-search-input" ' +
           'placeholder="Search by item type, brand, vendor or batch code..." ' +
           'aria-label="Search inventory items">' +
@@ -549,10 +549,16 @@ var Inventory = (function () {
           'Load Sample Items' +
         '</button>' +
       '</div>' +
+      '<!-- Bulk Action Bar -->' +
+      '<div id="inv-bulk-bar" class="bulk-action-bar" hidden>' +
+        '<span class="bulk-count" id="inv-bulk-count">0 selected</span>' +
+        '<button type="button" class="btn btn-sm" id="inv-bulk-delete">🗑️ Delete Selected</button>' +
+      '</div>' +
       '<!-- Items Table -->' +
-      '<div class="inv-table-container" role="region" aria-label="Inventory items table" tabindex="0">' +
-        '<table class="inv-table" id="inv-items-table">' +
+      '<div class="inv-table-container table-wrapper" role="region" aria-label="Inventory items table" tabindex="0">' +
+        '<table class="inv-table data-table" id="inv-items-table">' +
           '<thead><tr>' +
+            '<th class="check-cell"><input type="checkbox" id="inv-select-all" aria-label="Select all items"></th>' +
             '<th>Code</th><th>Type</th><th>Brand</th>' +
             '<th>Vendor</th><th>Batch</th><th>MRP</th>' +
             '<th>Sales Price</th><th>Qty</th><th>Actions</th>' +
@@ -808,6 +814,31 @@ var Inventory = (function () {
           _handleDelete(itemId);
         }
       });
+
+      // Individual checkbox change: update bulk bar and select-all state
+      tbody.addEventListener('change', function (e) {
+        if (e.target.classList.contains('inv-item-check')) {
+          _updateBulkBar();
+        }
+      });
+    }
+
+    // Select All checkbox
+    var selectAll = document.getElementById('inv-select-all');
+    if (selectAll) {
+      selectAll.addEventListener('change', function () {
+        var checkboxes = document.querySelectorAll('.inv-item-check');
+        for (var i = 0; i < checkboxes.length; i++) {
+          checkboxes[i].checked = selectAll.checked;
+        }
+        _updateBulkBar();
+      });
+    }
+
+    // Bulk Delete button
+    var bulkDeleteBtn = document.getElementById('inv-bulk-delete');
+    if (bulkDeleteBtn) {
+      bulkDeleteBtn.addEventListener('click', _handleBulkDelete);
     }
   }
 
@@ -882,11 +913,15 @@ var Inventory = (function () {
   function _renderItemsTable(items) {
     var tbody = document.getElementById('inv-items-tbody');
     var emptyMsg = document.getElementById('inv-empty-msg');
+    var bulkBar = document.getElementById('inv-bulk-bar');
+    var selectAll = document.getElementById('inv-select-all');
     if (!tbody) return;
 
     if (!items || items.length === 0) {
       tbody.innerHTML = '';
       if (emptyMsg) emptyMsg.hidden = false;
+      if (bulkBar) bulkBar.hidden = true;
+      if (selectAll) selectAll.checked = false;
       return;
     }
 
@@ -895,24 +930,27 @@ var Inventory = (function () {
     var html = '';
     for (var i = 0; i < items.length; i++) {
       var item = items[i];
-      html += '<tr>' +
-        '<td>' + Utils.escapeHtml(item.item_code || '') + '</td>' +
-        '<td>' + Utils.escapeHtml(item.item_type || '') + '</td>' +
-        '<td>' + Utils.escapeHtml(item.brand || '') + '</td>' +
-        '<td>' + Utils.escapeHtml(item.vendor_code || '') + '</td>' +
-        '<td>' + Utils.escapeHtml(item.batch_code || '') + '</td>' +
-        '<td>' + Utils.formatCurrency(item.mrp) + '</td>' +
-        '<td>' + Utils.formatCurrency(item.sales_price) + '</td>' +
-        '<td>' + (item.quantity || 0) + '</td>' +
-        '<td class="inv-actions">' +
-          '<button type="button" class="btn btn-sm inv-btn-edit" data-id="' +
-            Utils.escapeHtml(item.id) + '" aria-label="Edit item">Edit</button>' +
-          '<button type="button" class="btn btn-sm btn-danger inv-btn-delete" data-id="' +
-            Utils.escapeHtml(item.id) + '" aria-label="Delete item">Delete</button>' +
-        '</td>' +
-      '</tr>';
+      html += '<tr>';
+      html += '<td class="check-cell"><input type="checkbox" class="inv-item-check" data-id="' + Utils.escapeHtml(item.id) + '" aria-label="Select ' + Utils.escapeHtml(item.item_code || '') + '"></td>';
+      html += '<td>' + Utils.escapeHtml(item.item_code || '') + '</td>';
+      html += '<td>' + Utils.escapeHtml(item.item_type || '') + '</td>';
+      html += '<td>' + Utils.escapeHtml(item.brand || '') + '</td>';
+      html += '<td>' + Utils.escapeHtml(item.vendor_code || '') + '</td>';
+      html += '<td>' + Utils.escapeHtml(item.batch_code || '') + '</td>';
+      html += '<td>' + Utils.formatCurrency(item.mrp) + '</td>';
+      html += '<td>' + Utils.formatCurrency(item.sales_price) + '</td>';
+      html += '<td>' + (item.quantity || 0) + '</td>';
+      html += '<td class="actions-cell">';
+      html += '<button type="button" class="btn-icon-sm edit inv-btn-edit" data-id="' + Utils.escapeHtml(item.id) + '" aria-label="Edit item" title="Edit">✏️</button>';
+      html += '<button type="button" class="btn-icon-sm delete inv-btn-delete" data-id="' + Utils.escapeHtml(item.id) + '" aria-label="Delete item" title="Delete">🗑️</button>';
+      html += '</td>';
+      html += '</tr>';
     }
     tbody.innerHTML = html;
+
+    // Reset select-all and bulk bar after re-render
+    if (selectAll) selectAll.checked = false;
+    if (bulkBar) bulkBar.hidden = true;
   }
 
   // ─── Modal Handlers ─────────────────────────────────────────────────────────
@@ -1154,6 +1192,59 @@ var Inventory = (function () {
       }
       Utils.showToast(errors[0] || 'Failed to save reorder config.', 'error');
     }
+  }
+
+  /**
+   * Updates the bulk action bar visibility and count.
+   * @private
+   */
+  function _updateBulkBar() {
+    var checkboxes = document.querySelectorAll('.inv-item-check');
+    var checked = document.querySelectorAll('.inv-item-check:checked');
+    var bulkBar = document.getElementById('inv-bulk-bar');
+    var bulkCount = document.getElementById('inv-bulk-count');
+    var selectAll = document.getElementById('inv-select-all');
+
+    if (bulkBar) {
+      bulkBar.hidden = checked.length === 0;
+    }
+    if (bulkCount) {
+      bulkCount.textContent = checked.length + ' selected';
+    }
+    if (selectAll) {
+      selectAll.checked = checkboxes.length > 0 && checked.length === checkboxes.length;
+    }
+  }
+
+  /**
+   * Handles bulk delete of all selected items.
+   * @private
+   */
+  async function _handleBulkDelete() {
+    var checked = document.querySelectorAll('.inv-item-check:checked');
+    if (checked.length === 0) return;
+
+    var confirmed = await Utils.showConfirmDialog(
+      'Are you sure you want to delete ' + checked.length + ' selected item(s)? This cannot be undone.'
+    );
+    if (!confirmed) return;
+
+    var deleted = 0;
+    var failed = 0;
+    for (var i = 0; i < checked.length; i++) {
+      var itemId = checked[i].getAttribute('data-id');
+      var result = await deleteItem(itemId);
+      if (result.success) {
+        deleted++;
+      } else {
+        failed++;
+      }
+    }
+
+    var msg = 'Deleted: ' + deleted;
+    if (failed > 0) msg += ', Failed: ' + failed;
+    Utils.showToast(msg, deleted > 0 ? 'success' : 'error');
+    _loadItemList();
   }
 
   /**
