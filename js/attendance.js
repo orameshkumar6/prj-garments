@@ -361,9 +361,9 @@ var Attendance = (function () {
       html += '<tr>';
       html += '<td>' + esc(emp.employee_code || '') + '</td>';
       html += '<td>' + esc(emp.name || '') + '</td>';
-      html += '<td><input type="radio" name="' + rowName + '" value="Present" data-code="' + esc(emp.employee_code) + '" data-name="' + esc(emp.name) + '"' + (existing === 'Present' ? ' checked' : '') + '></td>';
-      html += '<td><input type="radio" name="' + rowName + '" value="Absent" data-code="' + esc(emp.employee_code) + '" data-name="' + esc(emp.name) + '"' + (existing === 'Absent' ? ' checked' : '') + '></td>';
-      html += '<td><input type="radio" name="' + rowName + '" value="Half Day" data-code="' + esc(emp.employee_code) + '" data-name="' + esc(emp.name) + '"' + (existing === 'Half Day' ? ' checked' : '') + '></td>';
+      html += '<td><input type="radio" name="' + rowName + '" id="' + rowName + '-present" value="Present" data-code="' + esc(emp.employee_code) + '" data-name="' + esc(emp.name) + '" aria-label="' + esc(emp.name) + ' Present"' + (existing === 'Present' ? ' checked' : '') + '></td>';
+      html += '<td><input type="radio" name="' + rowName + '" id="' + rowName + '-absent" value="Absent" data-code="' + esc(emp.employee_code) + '" data-name="' + esc(emp.name) + '" aria-label="' + esc(emp.name) + ' Absent"' + (existing === 'Absent' ? ' checked' : '') + '></td>';
+      html += '<td><input type="radio" name="' + rowName + '" id="' + rowName + '-halfday" value="Half Day" data-code="' + esc(emp.employee_code) + '" data-name="' + esc(emp.name) + '" aria-label="' + esc(emp.name) + ' Half Day"' + (existing === 'Half Day' ? ' checked' : '') + '></td>';
       html += '</tr>';
     }
 

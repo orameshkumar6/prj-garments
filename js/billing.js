@@ -415,7 +415,7 @@ var Billing = (function () {
     // ── Barcode Scanner Input Section ──
     html += '<div class="billing-section billing-barcode-section">';
     html += '<input type="text" id="billing-barcode-input" class="form-input" ';
-    html += 'placeholder="Scan barcode or enter item code..." autofocus />';
+    html += 'placeholder="Scan barcode or enter item code..." autofocus aria-label="Barcode scanner input" />';
     html += '</div>';
 
     // ── Item Search/Add Section ──
@@ -468,7 +468,7 @@ var Billing = (function () {
     // ── Payment Type Section ──
     html += '<div class="billing-section billing-payment">';
     html += '<div class="form-group">';
-    html += '<label>Payment Type</label>';
+    html += '<label for="billing-payment-type">Payment Type</label>';
     html += '<select id="billing-payment-type" class="form-input">';
     html += '<option value="UPI" selected>UPI</option>';
     html += '<option value="Cash">Cash</option>';
@@ -752,11 +752,11 @@ var Billing = (function () {
         rows += '<td>' + (i + 1) + '</td>';
         rows += '<td>' + esc(item.item_type || item.item_code || '') + '</td>';
         rows += '<td><input type="number" class="billing-qty-input" data-index="' + i + '" ';
-        rows += 'min="1" value="' + item.quantity + '" /></td>';
+        rows += 'min="1" value="' + item.quantity + '" aria-label="Quantity for item ' + (i + 1) + '" /></td>';
         rows += '<td>' + Utils.formatCurrency(item.mrp) + '</td>';
         rows += '<td>' + Utils.formatCurrency(item.sales_price) + '</td>';
         rows += '<td>' + Utils.formatCurrency(item.line_total) + '</td>';
-        rows += '<td><select class="billing-emp-select" data-index="' + i + '" style="min-width:100px;height:32px;font-size:0.8125rem;">';
+        rows += '<td><select class="billing-emp-select" data-index="' + i + '" style="min-width:100px;height:32px;font-size:0.8125rem;" aria-label="Employee for item ' + (i + 1) + '">';
         rows += '<option value="">--</option>';
         for (var ei = 0; ei < _activeEmployees.length; ei++) {
           var emp = _activeEmployees[ei];

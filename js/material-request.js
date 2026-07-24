@@ -566,7 +566,7 @@ var MaterialRequest = (function () {
         '<div class="card mr-list-card">' +
           '<h3 class="card-title">Request History</h3>' +
           '<div class="mr-filters">' +
-            '<select id="mr-status-filter" class="form-input">' +
+            '<select id="mr-status-filter" class="form-input" aria-label="Filter by request status">' +
               '<option value="all">All Statuses</option>' +
               '<option value="Pending">Pending</option>' +
               '<option value="Approved">Approved</option>' +
@@ -650,8 +650,8 @@ var MaterialRequest = (function () {
     }
 
     row.innerHTML =
-      '<select class="mr-item-select form-input">' + itemOptions + '</select>' +
-      '<input type="number" class="mr-item-qty form-input" min="1" max="9999" value="1" placeholder="Qty" />' +
+      '<select class="mr-item-select form-input" aria-label="Select item for row ' + (rowCount + 1) + '">' + itemOptions + '</select>' +
+      '<input type="number" class="mr-item-qty form-input" min="1" max="9999" value="1" placeholder="Qty" aria-label="Quantity for row ' + (rowCount + 1) + '" />' +
       '<button type="button" class="btn btn-danger btn-sm mr-remove-item">&times;</button>';
 
     // Remove button event

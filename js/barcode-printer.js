@@ -52,7 +52,7 @@ var BarcodePrinter = (function() {
     var container = document.querySelector('#screen-barcode .screen-content');
     if (!container) return;
     container.innerHTML = '<h2>Barcode & Label Printing</h2>' +
-      '<div class="barcode-toolbar"><button id="bc-load-btn" class="btn btn-primary">Load Items</button> <button id="bc-select-all" class="btn btn-secondary">Select All</button> <button id="bc-deselect-all" class="btn btn-secondary">Deselect All</button> <select id="bc-format"><option value="CODE128">Code128</option><option value="QR">QR Code</option></select> <button id="bc-print-btn" class="btn btn-primary">Print Selected</button></div>' +
+      '<div class="barcode-toolbar"><button id="bc-load-btn" class="btn btn-primary">Load Items</button> <button id="bc-select-all" class="btn btn-secondary">Select All</button> <button id="bc-deselect-all" class="btn btn-secondary">Deselect All</button> <select id="bc-format" aria-label="Barcode format"><option value="CODE128">Code128</option><option value="QR">QR Code</option></select> <button id="bc-print-btn" class="btn btn-primary">Print Selected</button></div>' +
       '<div id="bc-item-list" class="bc-item-list"></div>';
 
     document.getElementById('bc-load-btn').addEventListener('click', loadItems);
@@ -68,7 +68,7 @@ var BarcodePrinter = (function() {
     var html = '<div class="table-wrapper"><table class="data-table"><thead><tr><th></th><th>Code</th><th>Type</th><th>Brand</th><th>Sales Price</th><th>MRP</th></tr></thead><tbody>';
     _items.forEach(function(item) {
       var checked = _selectedIds.has(item.id) ? ' checked' : '';
-      html += '<tr><td><input type="checkbox" class="bc-check" data-id="' + item.id + '"' + checked + '></td><td>' + Utils.escapeHtml(item.item_code||'') + '</td><td>' + Utils.escapeHtml(item.item_type||'') + '</td><td>' + Utils.escapeHtml(item.brand||'') + '</td><td>' + Utils.formatCurrency(item.sales_price) + '</td><td>' + Utils.formatCurrency(item.mrp) + '</td></tr>';
+      html += '<tr><td><input type="checkbox" class="bc-check" data-id="' + item.id + '"' + checked + ' aria-label="Select ' + Utils.escapeHtml(item.item_code||'item') + '"></td><td>' + Utils.escapeHtml(item.item_code||'') + '</td><td>' + Utils.escapeHtml(item.item_type||'') + '</td><td>' + Utils.escapeHtml(item.brand||'') + '</td><td>' + Utils.formatCurrency(item.sales_price) + '</td><td>' + Utils.formatCurrency(item.mrp) + '</td></tr>';
     });
     html += '</tbody></table></div>';
     container.innerHTML = html;
