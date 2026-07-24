@@ -545,6 +545,9 @@ var Inventory = (function () {
         '<button type="button" id="inv-btn-reorder-config" class="btn btn-secondary">' +
           'Reorder Config' +
         '</button>' +
+        '<button type="button" id="inv-btn-load-defaults" class="btn btn-secondary">' +
+          'Load Sample Items' +
+        '</button>' +
       '</div>' +
       '<!-- Items Table -->' +
       '<div class="inv-table-container" role="region" aria-label="Inventory items table" tabindex="0">' +
@@ -731,6 +734,12 @@ var Inventory = (function () {
       reorderBtn.addEventListener('click', function () {
         _openReorderModal();
       });
+    }
+
+    // Load Sample Items button
+    var loadDefaultsBtn = document.getElementById('inv-btn-load-defaults');
+    if (loadDefaultsBtn) {
+      loadDefaultsBtn.addEventListener('click', _handleLoadDefaults);
     }
 
     // Cancel buttons
@@ -1162,6 +1171,76 @@ var Inventory = (function () {
     } else {
       Utils.showToast((result.errors && result.errors[0]) || 'Failed to delete item.', 'error');
     }
+  }
+
+  // ─── Load Sample/Default Items ──────────────────────────────────────────────
+
+  var DEFAULT_ITEMS = [
+    { item_type: 'Shirt', brand: 'Raymond', vendor_code: 'VNDRAY01', batch_code: 'BAT2025A', cost_price: 450, mrp: 999, sales_price: 799, quantity: 50 },
+    { item_type: 'Shirt', brand: 'Van Heusen', vendor_code: 'VNDVH01', batch_code: 'BAT2025A', cost_price: 520, mrp: 1299, sales_price: 999, quantity: 40 },
+    { item_type: 'Shirt', brand: 'Peter England', vendor_code: 'VNDPE01', batch_code: 'BAT2025A', cost_price: 380, mrp: 899, sales_price: 699, quantity: 60 },
+    { item_type: 'Shirt', brand: 'Allen Solly', vendor_code: 'VNDAS01', batch_code: 'BAT2025A', cost_price: 490, mrp: 1199, sales_price: 899, quantity: 35 },
+    { item_type: 'Trouser', brand: 'Raymond', vendor_code: 'VNDRAY02', batch_code: 'BAT2025A', cost_price: 600, mrp: 1499, sales_price: 1199, quantity: 30 },
+    { item_type: 'Trouser', brand: 'Van Heusen', vendor_code: 'VNDVH02', batch_code: 'BAT2025A', cost_price: 550, mrp: 1399, sales_price: 1099, quantity: 25 },
+    { item_type: 'Trouser', brand: 'Arrow', vendor_code: 'VNDARW01', batch_code: 'BAT2025A', cost_price: 650, mrp: 1599, sales_price: 1299, quantity: 20 },
+    { item_type: 'T-Shirt', brand: 'US Polo', vendor_code: 'VNDUSP01', batch_code: 'BAT2025A', cost_price: 320, mrp: 799, sales_price: 599, quantity: 80 },
+    { item_type: 'T-Shirt', brand: 'Levis', vendor_code: 'VNDLEV01', batch_code: 'BAT2025A', cost_price: 400, mrp: 999, sales_price: 799, quantity: 45 },
+    { item_type: 'T-Shirt', brand: 'Jack Jones', vendor_code: 'VNDJJ01', batch_code: 'BAT2025A', cost_price: 280, mrp: 699, sales_price: 549, quantity: 70 },
+    { item_type: 'Jeans', brand: 'Levis', vendor_code: 'VNDLEV02', batch_code: 'BAT2025A', cost_price: 800, mrp: 1999, sales_price: 1599, quantity: 35 },
+    { item_type: 'Jeans', brand: 'Wrangler', vendor_code: 'VNDWRG01', batch_code: 'BAT2025A', cost_price: 700, mrp: 1799, sales_price: 1399, quantity: 40 },
+    { item_type: 'Jeans', brand: 'Pepe Jeans', vendor_code: 'VNDPPJ01', batch_code: 'BAT2025A', cost_price: 650, mrp: 1699, sales_price: 1299, quantity: 30 },
+    { item_type: 'Saree', brand: 'Kanchipuram Silk', vendor_code: 'VNDKAN01', batch_code: 'BAT2025A', cost_price: 2500, mrp: 5999, sales_price: 4999, quantity: 15 },
+    { item_type: 'Saree', brand: 'Banarasi', vendor_code: 'VNDBAN01', batch_code: 'BAT2025A', cost_price: 1800, mrp: 3999, sales_price: 3499, quantity: 20 },
+    { item_type: 'Saree', brand: 'Cotton Handloom', vendor_code: 'VNDCTH01', batch_code: 'BAT2025A', cost_price: 600, mrp: 1499, sales_price: 1199, quantity: 40 },
+    { item_type: 'Kurta', brand: 'Fabindia', vendor_code: 'VNDFAB01', batch_code: 'BAT2025A', cost_price: 500, mrp: 1299, sales_price: 999, quantity: 30 },
+    { item_type: 'Kurta', brand: 'Manyavar', vendor_code: 'VNDMNY01', batch_code: 'BAT2025A', cost_price: 750, mrp: 1799, sales_price: 1499, quantity: 25 },
+    { item_type: 'Innerwear', brand: 'Jockey', vendor_code: 'VNDJKY01', batch_code: 'BAT2025A', cost_price: 150, mrp: 399, sales_price: 349, quantity: 100 },
+    { item_type: 'Innerwear', brand: 'Rupa', vendor_code: 'VNDRUP01', batch_code: 'BAT2025A', cost_price: 80, mrp: 199, sales_price: 179, quantity: 150 },
+    { item_type: 'Kids Wear', brand: 'Gini Jony', vendor_code: 'VNDGJ01', batch_code: 'BAT2025A', cost_price: 250, mrp: 599, sales_price: 499, quantity: 50 },
+    { item_type: 'Kids Wear', brand: 'Biba Girls', vendor_code: 'VNDBG01', batch_code: 'BAT2025A', cost_price: 300, mrp: 699, sales_price: 599, quantity: 40 },
+    { item_type: 'Accessories', brand: 'Park Avenue', vendor_code: 'VNDPA01', batch_code: 'BAT2025A', cost_price: 200, mrp: 499, sales_price: 399, quantity: 60 },
+    { item_type: 'Accessories', brand: 'Wildcraft', vendor_code: 'VNDWC01', batch_code: 'BAT2025A', cost_price: 350, mrp: 899, sales_price: 699, quantity: 30 },
+    { item_type: 'Ethnic Wear', brand: 'Manyavar', vendor_code: 'VNDMNY02', batch_code: 'BAT2025A', cost_price: 1200, mrp: 2999, sales_price: 2499, quantity: 15 }
+  ];
+
+  /**
+   * Handles the "Load Sample Items" button click.
+   * Checks for duplicates before adding each item.
+   * @private
+   */
+  async function _handleLoadDefaults() {
+    var confirmed = await Utils.showConfirmDialog(
+      'Load 25 sample clothing items? Existing items with same vendor+batch code will be skipped.'
+    );
+    if (!confirmed) return;
+
+    Utils.showToast('Loading sample items...', 'info');
+
+    var added = 0;
+    var skipped = 0;
+    var failed = 0;
+
+    for (var i = 0; i < DEFAULT_ITEMS.length; i++) {
+      var item = DEFAULT_ITEMS[i];
+      var result = await addItem(item);
+      if (result.success) {
+        added++;
+      } else {
+        // Check if it's a duplicate error
+        var errMsg = (result.errors || []).join(' ').toLowerCase();
+        if (errMsg.indexOf('already exists') !== -1 || errMsg.indexOf('duplicate') !== -1) {
+          skipped++;
+        } else {
+          failed++;
+        }
+      }
+    }
+
+    var msg = 'Added: ' + added + ', Skipped (duplicates): ' + skipped;
+    if (failed > 0) msg += ', Failed: ' + failed;
+
+    Utils.showToast(msg, added > 0 ? 'success' : 'info');
+    _loadItemList();
   }
 
   // ─── Public API ──────────────────────────────────────────────────────────────
