@@ -638,6 +638,62 @@ var Reports = (function () {
     });
   }
 
+  // ─── Missing Helper Functions ───────────────────────────────────────────────
+
+  /**
+   * Creates a tab button element for report navigation.
+   * @param {string} id - Tab button ID
+   * @param {string} label - Tab label text
+   * @param {boolean} active - Whether this tab is active by default
+   * @returns {HTMLElement} Button element
+   * @private
+   */
+  function _createTab(id, label, active) {
+    var btn = document.createElement('button');
+    btn.type = 'button';
+    btn.id = id;
+    btn.className = 'report-tab' + (active ? ' active' : '');
+    btn.textContent = label;
+    btn.setAttribute('role', 'tab');
+    btn.setAttribute('aria-selected', active ? 'true' : 'false');
+    return btn;
+  }
+
+  /**
+   * Switches between stock/reorder tabs.
+   * @param {string} activeTabId - ID of the tab to activate
+   * @param {string} showContentId - ID of content to show
+   * @param {string} hideContentId - ID of content to hide
+   * @param {string} showBtnId - ID of button to show
+   * @param {string} hideBtnId - ID of button to hide
+   * @private
+   */
+  function _switchStockTab(activeTabId, showContentId, hideContentId, showBtnId, hideBtnId) {
+    // Update tab styles
+    var tabs = document.querySelectorAll('.report-tab');
+    tabs.forEach(function(tab) {
+      tab.classList.remove('active');
+      tab.setAttribute('aria-selected', 'false');
+    });
+    var activeTab = document.getElementById(activeTabId);
+    if (activeTab) {
+      activeTab.classList.add('active');
+      activeTab.setAttribute('aria-selected', 'true');
+    }
+
+    // Show/hide content
+    var showContent = document.getElementById(showContentId);
+    var hideContent = document.getElementById(hideContentId);
+    if (showContent) showContent.hidden = false;
+    if (hideContent) hideContent.hidden = true;
+
+    // Show/hide buttons
+    var showBtn = document.getElementById(showBtnId);
+    var hideBtn = document.getElementById(hideBtnId);
+    if (showBtn) showBtn.hidden = false;
+    if (hideBtn) hideBtn.hidden = true;
+  }
+
   // ─── Public API ─────────────────────────────────────────────────────────────
 
   return {

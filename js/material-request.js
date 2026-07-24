@@ -709,6 +709,140 @@ var MaterialRequest = (function () {
     }
   }
 
+  // ─── Missing Helper: _loadRequests ──────────────────────────────────────────
+
+  /**
+   * Loads all material requests from Firestore and renders them.
+   * @private
+   */
+  async function _loadRequests() {
+    var listContainer = document.getElementById('mr-requests-list');
+    if (!listContainer) return;
+
+    try {
+      var constraints = {};
+      if (_currentFilter && _currentFilter !== 'all') {
+        constraints.where = [{ field: 'status', op: '==', value: _currentFilter }];
+      }
+      constraints.orderBy = [{ field: 'request_date', direction: 'desc' }];
+
+      var requests = await DataLayer.queryDocuments(COLLECTION_REQUESTS, constraints);
+      _renderRequestsList(requests, listContainer);
+    } catch (e) {
+      listContainer.innerHTML = '<p class="empty-state">Failed to load requests: ' + Utils.escapeHtml(e.message) + '</p>';
+    }
+  }
+
+  /**
+   * Renders the requests list table.
+   * @param {Array} requests - Array of request documents
+   * @param {HTMLElement} container - DOM container
+   * @private
+   */
+  function _renderRequestsList(requests, container) {
+    if (!requests || requests.length === 0) {
+      container.innerHTML = '<p class="empty-state">No material requests found.</p>';
+      return;
+    }
+
+    var html = '<div class="table-wrapper"><table class="data-table"><thead><tr>';
+    html += '<th>Employee</th><th>Date</th><th>Items</th><th>Status</th><th>Actions</th>';
+    html += '</tr></thead><tbody>';
+
+    for (var i = 0; i < requests.length; i++) {
+      var req = requests[i];
+      var dateStr = Utils.formatDate(req.request_date ? new Date(req.request_date) : new Date());
+      var itemCount = req.items ? req.items.length : 0;
+      var statusClass = req.status === 'Approved' ? 'success' : (req.status === 'Pending' ? 'warning' : 'danger');
+
+      html += '<tr>';
+      html += '<td>' + Utils.escapeHtml(req.employee_name || '') + '</td>';
+      html += '<td>' + Utils.escapeHtml(dateStr) + '</td>';
+      html += '<td>' + itemCount + ' item(s)</td>';
+      html += '<td><span class="status-badge ' + statusClass + '">' + Utils.escapeHtml(req.status || '') + '</span></td>';
+      html += '<td>';
+      if (req.status === 'Pending') {
+        html += '<button class="btn btn-sm btn-primary mr-approve-btn" data-id="' + Utils.escapeHtml(req.id) + '">Approve</button> ';
+        html += '<button class="btn btn-sm btn-danger mr-reject-btn" data-id="' + Utils.escapeHtml(req.id) + '">Reject</button>';
+      } else if (req.status === 'Approved') {
+        html += '<button class="btn btn-sm btn-secondary mr-return-btn" data-id="' + Utils.escapeHtml(req.id) + '">Return</button>';
+      } else {
+        html += '-';
+      }
+      html += '</td></tr>';
+    }
+
+    html += '</tbody></table></div>';
+    container.innerHTML = html;
+
+    // Attach action listeners
+    container.querySelectorAll('.mr-approve-btn').forEach(function(btn) {
+      btn.addEventListener('click', function() { _handleApprove(btn.dataset.id); });
+    });
+    container.querySelectorAll('.mr-reject-btn').forEach(function(btn) {
+      btn.addEventListener('click', function() { _handleReject(btn.dataset.id); });
+    });
+    container.querySelectorAll('.mr-return-btn').forEach(function(btn) {
+      btn.addEventListener('click', function() { _handleReturn(btn.dataset.id); });
+    });
+  }
+
+  /**
+   * Handles approve action.
+   * @private
+   */
+  async function _handleApprove(requestId) {
+    var result = await approveRequest(requestId);
+    if (result.success) {
+      Utils.showToast('Request approved.', 'success');
+      _loadRequests();
+    } else {
+      Utils.showToast(result.error || 'Approval failed.', 'error');
+    }
+  }
+
+  /**
+   * Handles reject action.
+   * @private
+   */
+  async function _handleReject(requestId) {
+    var result = await rejectRequest(requestId);
+    if (result.success) {
+      Utils.showToast('Request rejected.', 'success');
+      _loadRequests();
+    } else {
+      Utils.showToast(result.error || 'Rejection failed.', 'error');
+    }
+  }
+
+  /**
+   * Handles return action.
+   * @private
+   */
+  async function _handleReturn(requestId) {
+    // For now, return all items fully
+    var confirmed = await Utils.showConfirmDialog('Return all materials for this request?');
+    if (!confirmed) return;
+
+    var req = await DataLayer.getDocument(COLLECTION_REQUESTS, requestId);
+    if (!req || !req.items) { Utils.showToast('Request not found.', 'error'); return; }
+
+    var returnItems = req.items.map(function(item) {
+      var outstanding = (item.qty_requested || 0) - (item.qty_returned || 0);
+      return { item_code: item.item_code, quantity: outstanding };
+    }).filter(function(item) { return item.quantity > 0; });
+
+    if (returnItems.length === 0) { Utils.showToast('Nothing to return.', 'info'); return; }
+
+    var result = await processReturn(requestId, returnItems);
+    if (result.success) {
+      Utils.showToast('Materials returned.', 'success');
+      _loadRequests();
+    } else {
+      Utils.showToast(result.error || 'Return failed.', 'error');
+    }
+  }
+
   // ─── Public API ─────────────────────────────────────────────────────────────
 
   return {
