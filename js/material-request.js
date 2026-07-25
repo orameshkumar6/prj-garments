@@ -30,6 +30,16 @@ var MaterialRequest = (function () {
   var _allItems = [];
   var _currentFilter = 'all';
 
+  // ─── Helpers ────────────────────────────────────────────────────────────────
+
+  function _getTodayString() {
+    var now = new Date();
+    var y = now.getFullYear();
+    var m = String(now.getMonth() + 1).padStart(2, '0');
+    var d = String(now.getDate()).padStart(2, '0');
+    return y + '-' + m + '-' + d;
+  }
+
   // ─── Validation ─────────────────────────────────────────────────────────────
 
   /**
@@ -168,7 +178,7 @@ var MaterialRequest = (function () {
       employee_name: data.employee_name.trim(),
       items: [],
       status: STATUS_PENDING,
-      request_date: new Date(),
+      request_date: data.request_date ? new Date(data.request_date) : new Date(),
       updated_at: new Date()
     };
 
@@ -554,6 +564,10 @@ var MaterialRequest = (function () {
               '<input type="text" id="mr-employee-name" maxlength="100" placeholder="Enter employee name" required />' +
             '</div>' +
             '<div class="form-group">' +
+              '<label for="mr-request-date">Request Date</label>' +
+              '<input type="date" id="mr-request-date" value="' + _getTodayString() + '" required />' +
+            '</div>' +
+            '<div class="form-group">' +
               '<label>Request Items</label>' +
               '<div id="mr-items-container" class="mr-items-container"></div>' +
               '<button type="button" id="mr-add-item-btn" class="btn btn-secondary btn-sm">+ Add Item</button>' +
@@ -689,7 +703,8 @@ var MaterialRequest = (function () {
 
     var data = {
       employee_name: employeeName ? employeeName.value : '',
-      items: items
+      items: items,
+      request_date: document.getElementById('mr-request-date') ? document.getElementById('mr-request-date').value : _getTodayString()
     };
 
     var result = await createRequest(data);
