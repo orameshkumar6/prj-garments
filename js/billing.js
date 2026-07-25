@@ -38,7 +38,7 @@ var Billing = (function () {
     var mrp = Number(item.mrp) || salesPrice;
     var lineTotal = Utils.roundTo2(salesPrice * qty);
 
-    _lineItems.push({
+    _lineItems.unshift({
       item_code: item.item_code || '',
       item_type: item.item_type || '',
       brand: item.brand || '',
@@ -638,12 +638,15 @@ var Billing = (function () {
     for (var j = 0; j < resultItems.length; j++) {
       (function (idx) {
         resultItems[idx].addEventListener('click', function () {
-          _selectedItem = items[idx];
+          // Auto-add item with qty 1 immediately on selection
+          var item = items[idx];
+          addLineItem(item, 1);
+          // Clear search input
           var input = document.getElementById('billing-item-search');
-          if (input) {
-            input.value = items[idx].item_code + ' - ' + (items[idx].item_type || '');
-          }
+          if (input) input.value = '';
+          _selectedItem = null;
           _hideSearchResults();
+          Utils.showToast('Added: ' + (item.item_type || '') + ' - ' + (item.brand || ''), 'success');
         });
       })(j);
     }
