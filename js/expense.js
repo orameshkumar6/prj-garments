@@ -315,8 +315,8 @@ var ExpenseTracker = (function () {
       '<div class="exp-list-section">' +
         '<h3 class="section-subheading">Expenses</h3>' +
         '<div class="exp-filters">' +
-          '<input type="date" id="exp-filter-start" aria-label="Filter start date">' +
-          '<input type="date" id="exp-filter-end" aria-label="Filter end date">' +
+          '<input type="date" id="exp-filter-start" value="' + todayStr + '" aria-label="Filter start date">' +
+          '<input type="date" id="exp-filter-end" value="' + todayStr + '" aria-label="Filter end date">' +
           '<select id="exp-filter-category" aria-label="Filter by category">' +
             '<option value="">All Categories</option>' +
             '<option value="Capital Expense">Capital Expense</option>' +
