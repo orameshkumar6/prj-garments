@@ -868,6 +868,10 @@ var Billing = (function () {
       var result = addLineItem(item, 1);
       if (result.success) {
         Utils.showToast('Added: ' + (item.item_type || '') + ' - ' + (item.brand || ''), 'success');
+        // Clear input only on successful add
+        if (barcodeInput) {
+          barcodeInput.value = '';
+        }
       } else {
         Utils.showToast(result.error, 'error');
       }
@@ -875,9 +879,8 @@ var Billing = (function () {
       Utils.showToast('Multiple items found for: ' + code, 'error');
     }
 
-    // Clear input and refocus
+    // Refocus input for next scan
     if (barcodeInput) {
-      barcodeInput.value = '';
       barcodeInput.focus();
     }
   }
