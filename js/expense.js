@@ -254,7 +254,7 @@ var ExpenseTracker = (function () {
           '<div class="form-grid">' +
             '<div class="form-row">' +
               '<label for="exp-f-date">Date *</label>' +
-              '<input type="date" id="exp-f-date" max="' + todayStr + '" required ' +
+              '<input type="date" id="exp-f-date" max="' + todayStr + '" value="' + todayStr + '" required ' +
                 'aria-label="Expense date">' +
               '<span class="field-error" id="exp-err-date"></span>' +
             '</div>' +
@@ -483,17 +483,28 @@ var ExpenseTracker = (function () {
         return;
       }
 
-      var html = '';
+      var html = '<div class="table-wrapper"><table class="data-table"><thead><tr>' +
+        '<th>Category</th><th>Total Amount</th><th>Transactions</th>' +
+        '</tr></thead><tbody>';
+      var grandTotal = 0;
+      var grandCount = 0;
       for (var j = 0; j < CATEGORIES.length; j++) {
         var cat = CATEGORIES[j];
         var data = summary[cat];
-        html += '' +
-          '<div class="exp-summary-card">' +
-            '<h4 class="exp-card-title">' + Utils.escapeHtml(cat) + '</h4>' +
-            '<p class="exp-card-total">' + Utils.formatCurrency(data.total) + '</p>' +
-            '<p class="exp-card-count">' + data.count + ' entries</p>' +
-          '</div>';
+        grandTotal += data.total;
+        grandCount += data.count;
+        html += '<tr>' +
+          '<td>' + Utils.escapeHtml(cat) + '</td>' +
+          '<td>' + Utils.formatCurrency(data.total) + '</td>' +
+          '<td>' + data.count + '</td>' +
+          '</tr>';
       }
+      html += '<tr style="font-weight:600;border-top:2px solid var(--color-border);">' +
+        '<td>Total</td>' +
+        '<td>' + Utils.formatCurrency(grandTotal) + '</td>' +
+        '<td>' + grandCount + '</td>' +
+        '</tr>';
+      html += '</tbody></table></div>';
       summaryContainer.innerHTML = html;
     } catch (e) {
       summaryContainer.innerHTML = '<p class="exp-empty-message">Failed to load summary.</p>';
