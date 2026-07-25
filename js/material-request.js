@@ -835,27 +835,93 @@ var MaterialRequest = (function () {
    * @private
    */
   async function _handleReturn(requestId) {
-    // For now, return all items fully
-    var confirmed = await Utils.showConfirmDialog('Return all materials for this request?');
-    if (!confirmed) return;
-
     var req = await DataLayer.getDocument(COLLECTION_REQUESTS, requestId);
     if (!req || !req.items) { Utils.showToast('Request not found.', 'error'); return; }
 
-    var returnItems = req.items.map(function(item) {
-      var outstanding = (item.qty_requested || 0) - (item.qty_returned || 0);
-      return { item_code: item.item_code, qty_returned: outstanding };
-    }).filter(function(item) { return item.qty_returned > 0; });
-
-    if (returnItems.length === 0) { Utils.showToast('Nothing to return.', 'info'); return; }
-
-    var result = await processReturn(requestId, returnItems);
-    if (result.success) {
-      Utils.showToast('Materials returned.', 'success');
-      _loadRequests();
-    } else {
-      Utils.showToast(result.error || 'Return failed.', 'error');
+    // Check if there's anything to return
+    var hasOutstanding = false;
+    for (var i = 0; i < req.items.length; i++) {
+      if ((req.items[i].qty_requested || 0) - (req.items[i].qty_returned || 0) > 0) {
+        hasOutstanding = true;
+        break;
+      }
     }
+    if (!hasOutstanding) { Utils.showToast('All items already returned.', 'info'); return; }
+
+    // Build return form modal
+    var esc = Utils.escapeHtml;
+    var overlay = document.createElement('div');
+    overlay.className = 'modal-overlay';
+    overlay.id = 'mr-return-modal';
+    overlay.style.cssText = 'position:fixed;inset:0;z-index:9500;background:rgba(0,0,0,0.5);display:flex;align-items:center;justify-content:center;padding:24px;';
+
+    var modalHtml = '<div class="modal" style="max-width:500px;">';
+    modalHtml += '<h2>Return Materials</h2>';
+    modalHtml += '<p style="margin-bottom:12px;color:var(--color-text-secondary);">Employee: <strong>' + esc(req.employee_name || '') + '</strong></p>';
+    modalHtml += '<div class="table-wrapper"><table class="data-table"><thead><tr>';
+    modalHtml += '<th>Item</th><th>Issued</th><th>Returned</th><th>Outstanding</th><th>Return Qty</th>';
+    modalHtml += '</tr></thead><tbody>';
+
+    for (var j = 0; j < req.items.length; j++) {
+      var item = req.items[j];
+      var issued = item.qty_requested || 0;
+      var returned = item.qty_returned || 0;
+      var outstanding = issued - returned;
+      modalHtml += '<tr>';
+      modalHtml += '<td>' + esc(item.name || item.item_code || '') + '</td>';
+      modalHtml += '<td>' + issued + '</td>';
+      modalHtml += '<td>' + returned + '</td>';
+      modalHtml += '<td>' + outstanding + '</td>';
+      modalHtml += '<td>';
+      if (outstanding > 0) {
+        modalHtml += '<input type="number" class="mr-return-qty-input form-input" data-code="' + esc(item.item_code) + '" min="0" max="' + outstanding + '" value="' + outstanding + '" style="width:70px;height:32px;" aria-label="Return qty for ' + esc(item.name || item.item_code) + '">';
+      } else {
+        modalHtml += '<span style="color:var(--color-text-secondary);">-</span>';
+      }
+      modalHtml += '</td></tr>';
+    }
+
+    modalHtml += '</tbody></table></div>';
+    modalHtml += '<div style="display:flex;gap:12px;justify-content:flex-end;margin-top:16px;">';
+    modalHtml += '<button type="button" class="btn btn-secondary" id="mr-return-cancel">Cancel</button>';
+    modalHtml += '<button type="button" class="btn btn-primary" id="mr-return-submit">Submit Return</button>';
+    modalHtml += '</div></div>';
+
+    overlay.innerHTML = modalHtml;
+    document.body.appendChild(overlay);
+
+    // Cancel button
+    document.getElementById('mr-return-cancel').addEventListener('click', function () {
+      overlay.parentNode.removeChild(overlay);
+    });
+
+    // Submit button
+    document.getElementById('mr-return-submit').addEventListener('click', async function () {
+      var inputs = overlay.querySelectorAll('.mr-return-qty-input');
+      var returnItems = [];
+
+      for (var k = 0; k < inputs.length; k++) {
+        var qty = parseInt(inputs[k].value, 10);
+        if (!isNaN(qty) && qty > 0) {
+          returnItems.push({ item_code: inputs[k].getAttribute('data-code'), qty_returned: qty });
+        }
+      }
+
+      if (returnItems.length === 0) {
+        Utils.showToast('Enter at least one return quantity.', 'error');
+        return;
+      }
+
+      var result = await processReturn(requestId, returnItems);
+      overlay.parentNode.removeChild(overlay);
+
+      if (result.success) {
+        Utils.showToast('Materials returned successfully.', 'success');
+        _loadRequests();
+      } else {
+        Utils.showToast(result.error || 'Return failed.', 'error');
+      }
+    });
   }
 
   // ─── Public API ─────────────────────────────────────────────────────────────
