@@ -359,9 +359,9 @@ body {
   font-family: inherit;
   cursor: pointer;
   transition: background-color 0.15s ease, box-shadow 0.15s ease;
-  min-width: 44px;
-  min-height: 44px;
-  padding: 10px 20px;
+  min-width: 36px;
+  min-height: 36px;
+  padding: 8px 16px;
   text-decoration: none;
   white-space: nowrap;
 }
@@ -455,14 +455,14 @@ body {
 .form-group select,
 .form-group textarea {
   width: 100%;
-  padding: 10px 12px;
+  padding: 8px 12px;
   font-size: var(--font-size-base);
   font-family: inherit;
   color: var(--color-text);
   background-color: var(--color-surface);
   border: 1px solid var(--color-border);
   border-radius: var(--radius);
-  min-height: 44px;
+  min-height: 36px;
   transition: border-color 0.15s ease, box-shadow 0.15s ease;
   outline: none;
 }
@@ -1223,7 +1223,7 @@ input[type="file"],
 select,
 .inv-search-input,
 .inv-filter-select {
-  height: 44px;
+  height: 36px;
   line-height: 1.4;
   vertical-align: middle;
   box-sizing: border-box;
