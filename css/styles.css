@@ -226,7 +226,7 @@ body {
 /* --- Sidebar Navigation --- */
 .sidebar {
   position: fixed;
-  top: 0;
+  top: 30px; /* offset for .sync-banner height */
   left: 0;
   bottom: 0;
   width: var(--sidebar-width);
