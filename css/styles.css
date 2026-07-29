@@ -3816,6 +3816,12 @@ textarea::placeholder {
   text-overflow: ellipsis;
 }
 
+.po-result-vendor {
+  font-size: 0.72rem;
+  color: var(--color-primary);
+  font-weight: 600;
+}
+
 .po-result-stock {
   font-size: 0.72rem;
   color: var(--color-text-secondary);

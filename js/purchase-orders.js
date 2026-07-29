@@ -8,8 +8,9 @@ var PurchaseOrders = (function () {
 
   // ─── Private State ──────────────────────────────────────────────────────────
 
-  var _orderItems    = [];  // [{item_code, item_name, qty, unit_price, item_id}]
+  var _orderItems     = [];  // [{item_code, item_name, qty, unit_price, item_id}]
   var _inventoryCache = [];
+  var _vendorMap      = {};  // vendor_code → vendor name
   var _savedDocNumber = null; // set after saving to Firestore
 
   // ─── Init ────────────────────────────────────────────────────────────────────
@@ -19,7 +20,8 @@ var PurchaseOrders = (function () {
     if (!container) return;
     container.innerHTML = _buildUI();
     _attachListeners();
-    await Promise.all([_loadVendors(), _loadInventory()]);
+    await _loadVendors();      // build _vendorMap first
+    await _loadInventory();    // then render items with vendor names
   }
 
   // ─── UI Builder ──────────────────────────────────────────────────────────────
@@ -152,6 +154,12 @@ var PurchaseOrders = (function () {
         var bc = (b.vendor_code || '').toLowerCase();
         return ac < bc ? -1 : ac > bc ? 1 : 0;
       });
+      /* build lookup map for use in search results */
+      _vendorMap = {};
+      for (var j = 0; j < vendors.length; j++) {
+        var vj = vendors[j];
+        if (vj.vendor_code) _vendorMap[vj.vendor_code] = vj.name || vj.vendor_name || vj.vendor_code;
+      }
       var sel = document.getElementById('po-vendor-select');
       if (!sel) return;
       var html = '<option value="">— No vendor —</option>';
@@ -197,10 +205,14 @@ var PurchaseOrders = (function () {
     for (var i = 0; i < list.length; i++) {
       var item = list[i];
       var origIdx = _inventoryCache.indexOf(item);
+      var vendorName = (item.vendor_code && _vendorMap[item.vendor_code])
+        ? _vendorMap[item.vendor_code] + ' (' + item.vendor_code + ')'
+        : (item.vendor_code || '');
       html += '<div class="po-result-item">' +
         '<div class="po-result-info">' +
           '<span class="po-result-code">' + _esc(item.item_code || '') + '</span> ' +
           '<span class="po-result-desc">' + _esc((item.item_type || '') + (item.brand ? ' · ' + item.brand : '')) + '</span>' +
+          (vendorName ? '<span class="po-result-vendor">' + _esc(vendorName) + '</span>' : '') +
           '<span class="po-result-stock">Stock: ' + (item.quantity || 0) +
             ' &nbsp;·&nbsp; Cost: ' + Utils.formatCurrency(item.cost_price || 0) + '</span>' +
         '</div>' +
@@ -223,12 +235,18 @@ var PurchaseOrders = (function () {
       }
     }
     _orderItems.push({
-      item_code:  item.item_code  || '',
-      item_name:  item.item_type  || '',
-      qty:        1,
-      unit_price: item.cost_price || 0,
-      item_id:    item.id
+      item_code:   item.item_code  || '',
+      item_name:   item.item_type  || '',
+      qty:         1,
+      unit_price:  item.cost_price || 0,
+      item_id:     item.id,
+      vendor_code: item.vendor_code || ''
     });
+    /* auto-select vendor when first item is added and no vendor chosen yet */
+    var sel = document.getElementById('po-vendor-select');
+    if (sel && !sel.value && item.vendor_code) {
+      sel.value = item.vendor_code;
+    }
     _renderOrderTable();
   }
 
