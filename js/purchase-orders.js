@@ -146,8 +146,11 @@ var PurchaseOrders = (function () {
 
   async function _loadVendors() {
     try {
-      var vendors = await DataLayer.queryDocuments('vendors', {
-        orderBy: [{ field: 'vendor_name', direction: 'asc' }]
+      var vendors = await DataLayer.queryDocuments('vendors', {});
+      vendors.sort(function (a, b) {
+        var ac = (a.vendor_code || '').toLowerCase();
+        var bc = (b.vendor_code || '').toLowerCase();
+        return ac < bc ? -1 : ac > bc ? 1 : 0;
       });
       var sel = document.getElementById('po-vendor-select');
       if (!sel) return;
@@ -155,9 +158,9 @@ var PurchaseOrders = (function () {
       for (var i = 0; i < vendors.length; i++) {
         var v = vendors[i];
         var code = v.vendor_code || v.id;
-        var name = v.vendor_name || code;
+        var name = v.name || v.vendor_name || code;
         html += '<option value="' + _esc(code) + '" data-name="' + _esc(name) + '">' +
-          _esc(name + (v.vendor_code ? ' (' + v.vendor_code + ')' : '')) + '</option>';
+          _esc(name + ' (' + code + ')') + '</option>';
       }
       sel.innerHTML = html;
     } catch (e) { /* ignore */ }
