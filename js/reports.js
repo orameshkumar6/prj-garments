@@ -307,7 +307,7 @@ var Reports = (function () {
    * @param {Array} lineItems - Array of {item_code, item_name, qty, unit_price}
    * @returns {Promise<object>} Result with saved document info or error
    */
-  async function saveDocument(docType, lineItems) {
+  async function saveDocument(docType, lineItems, vendorInfo) {
     if (!docType || (docType !== 'RFQ' && docType !== 'PO')) {
       return { success: false, error: 'Invalid document type. Must be "RFQ" or "PO".' };
     }
@@ -342,7 +342,9 @@ var Reports = (function () {
       doc_type: docType,
       date: new Date(),
       line_items: lineItems,
-      total: total
+      total: total,
+      vendor_code: vendorInfo ? (vendorInfo.vendor_code || '') : '',
+      vendor_name: vendorInfo ? (vendorInfo.vendor_name || '') : ''
     };
 
     try {
@@ -558,6 +560,9 @@ var Reports = (function () {
     actionBar.appendChild(rfqBtn);
     actionBar.appendChild(poBtn);
     screen.appendChild(actionBar);
+
+    // RFQ vendor-selection modal
+    _setupRFQModal(screen);
 
     // Event listeners
     generateBtn.addEventListener('click', _handleGenerateSalesReport);
@@ -1061,6 +1066,202 @@ var Reports = (function () {
     }
   }
 
+  // ─── RFQ Modal ──────────────────────────────────────────────────────────────
+
+  function _setupRFQModal(screen) {
+    var wrapper = document.createElement('div');
+    wrapper.innerHTML =
+      '<div id="rfq-modal" class="modal-overlay" hidden>' +
+        '<div class="modal-dialog" role="dialog" aria-modal="true" aria-labelledby="rfq-modal-title">' +
+          '<h3 id="rfq-modal-title">Generate RFQ</h3>' +
+          '<p class="rfq-modal-desc">How would you like to create the RFQ?</p>' +
+          '<div class="rfq-type-options">' +
+            '<div class="rfq-type-card" id="rfq-card-per" tabindex="0" role="button" aria-pressed="false">' +
+              '<span class="rfq-card-icon">📦</span>' +
+              '<span class="rfq-card-title">Per Vendor</span>' +
+              '<span class="rfq-card-desc">One RFQ per vendor, grouped by each item\'s vendor code</span>' +
+            '</div>' +
+            '<div class="rfq-type-card" id="rfq-card-single" tabindex="0" role="button" aria-pressed="false">' +
+              '<span class="rfq-card-icon">🏭</span>' +
+              '<span class="rfq-card-title">Single Vendor</span>' +
+              '<span class="rfq-card-desc">Choose one vendor — one RFQ for all items</span>' +
+            '</div>' +
+          '</div>' +
+          '<div id="rfq-vendor-picker" hidden>' +
+            '<div class="form-row" style="margin-top:14px;">' +
+              '<label for="rfq-vendor-sel">Select Vendor *</label>' +
+              '<select id="rfq-vendor-sel" class="form-input"><option value="">-- Select a vendor --</option></select>' +
+            '</div>' +
+          '</div>' +
+          '<div class="form-actions">' +
+            '<button type="button" id="rfq-confirm-btn" class="btn btn-primary" disabled>Generate</button>' +
+            '<button type="button" id="rfq-cancel-btn" class="btn btn-cancel">Cancel</button>' +
+          '</div>' +
+        '</div>' +
+      '</div>';
+
+    screen.appendChild(wrapper.firstElementChild);
+
+    var perCard    = document.getElementById('rfq-card-per');
+    var singleCard = document.getElementById('rfq-card-single');
+    var picker     = document.getElementById('rfq-vendor-picker');
+    var vendorSel  = document.getElementById('rfq-vendor-sel');
+    var confirmBtn = document.getElementById('rfq-confirm-btn');
+    var cancelBtn  = document.getElementById('rfq-cancel-btn');
+
+    function selectPer() {
+      perCard.classList.add('rfq-card-selected');
+      perCard.setAttribute('aria-pressed', 'true');
+      singleCard.classList.remove('rfq-card-selected');
+      singleCard.setAttribute('aria-pressed', 'false');
+      picker.hidden = true;
+      confirmBtn.disabled = false;
+    }
+
+    function selectSingle() {
+      singleCard.classList.add('rfq-card-selected');
+      singleCard.setAttribute('aria-pressed', 'true');
+      perCard.classList.remove('rfq-card-selected');
+      perCard.setAttribute('aria-pressed', 'false');
+      picker.hidden = false;
+      confirmBtn.disabled = vendorSel.value === '';
+    }
+
+    perCard.addEventListener('click', selectPer);
+    perCard.addEventListener('keydown', function (e) { if (e.key === 'Enter' || e.key === ' ') selectPer(); });
+    singleCard.addEventListener('click', selectSingle);
+    singleCard.addEventListener('keydown', function (e) { if (e.key === 'Enter' || e.key === ' ') selectSingle(); });
+
+    vendorSel.addEventListener('change', function () {
+      if (singleCard.classList.contains('rfq-card-selected')) {
+        confirmBtn.disabled = vendorSel.value === '';
+      }
+    });
+
+    cancelBtn.addEventListener('click', _closeRFQModal);
+
+    confirmBtn.addEventListener('click', function () {
+      if (perCard.classList.contains('rfq-card-selected')) {
+        _closeRFQModal();
+        _handleRFQPerVendor();
+      } else if (singleCard.classList.contains('rfq-card-selected')) {
+        var code = vendorSel.value;
+        if (!code) { Utils.showToast('Please select a vendor.', 'error'); return; }
+        var name = vendorSel.options[vendorSel.selectedIndex].text;
+        _closeRFQModal();
+        _handleRFQSingleVendor(code, name);
+      }
+    });
+  }
+
+  function _openRFQModal() {
+    var modal = document.getElementById('rfq-modal');
+    if (!modal) return;
+
+    var perCard    = document.getElementById('rfq-card-per');
+    var singleCard = document.getElementById('rfq-card-single');
+    var picker     = document.getElementById('rfq-vendor-picker');
+    var confirmBtn = document.getElementById('rfq-confirm-btn');
+    var vendorSel  = document.getElementById('rfq-vendor-sel');
+
+    if (perCard)    { perCard.classList.remove('rfq-card-selected'); perCard.setAttribute('aria-pressed', 'false'); }
+    if (singleCard) { singleCard.classList.remove('rfq-card-selected'); singleCard.setAttribute('aria-pressed', 'false'); }
+    if (picker)     picker.hidden = true;
+    if (confirmBtn) confirmBtn.disabled = true;
+
+    if (vendorSel && typeof Vendor !== 'undefined' && Vendor.getAllVendors) {
+      Vendor.getAllVendors().then(function (vendors) {
+        var html = '<option value="">-- Select a vendor --</option>';
+        for (var i = 0; i < vendors.length; i++) {
+          html += '<option value="' + Utils.escapeHtml(vendors[i].vendor_code) + '">' +
+            Utils.escapeHtml(vendors[i].vendor_code + ' — ' + vendors[i].name) + '</option>';
+        }
+        vendorSel.innerHTML = html;
+      });
+    }
+
+    modal.hidden = false;
+  }
+
+  function _closeRFQModal() {
+    var modal = document.getElementById('rfq-modal');
+    if (modal) modal.hidden = true;
+  }
+
+  async function _lookupItemVendors(itemCodes) {
+    var result = {};
+    try {
+      var allItems = await DataLayer.queryDocuments(COLLECTIONS.ITEMS, {});
+      var vendorNameMap = {};
+      if (typeof Vendor !== 'undefined' && Vendor.getAllVendors) {
+        var vendors = await Vendor.getAllVendors();
+        for (var v = 0; v < vendors.length; v++) {
+          vendorNameMap[vendors[v].vendor_code] = vendors[v].name;
+        }
+      }
+      for (var i = 0; i < allItems.length; i++) {
+        var itm = allItems[i];
+        if (itm.vendor_code && itemCodes.indexOf(itm.item_code) !== -1) {
+          result[itm.item_code] = {
+            vendor_code: itm.vendor_code,
+            vendor_name: vendorNameMap[itm.vendor_code] || itm.vendor_code
+          };
+        }
+      }
+    } catch (e) { /* silently ignore */ }
+    return result;
+  }
+
+  async function _handleRFQPerVendor() {
+    Utils.showToast('Looking up vendor info…', 'info');
+    var itemCodes = _salesReportData.map(function (i) { return i.item_code; });
+    var vendorLookup = await _lookupItemVendors(itemCodes);
+
+    var vendorGroups = {};
+    for (var i = 0; i < _salesReportData.length; i++) {
+      var item = _salesReportData[i];
+      var vi = vendorLookup[item.item_code] || { vendor_code: 'UNKNOWN', vendor_name: 'Unknown Vendor' };
+      if (!vendorGroups[vi.vendor_code]) {
+        vendorGroups[vi.vendor_code] = { vendorInfo: vi, items: [] };
+      }
+      vendorGroups[vi.vendor_code].items.push(item);
+    }
+
+    var codes = Object.keys(vendorGroups);
+    var created = 0;
+    var failed = 0;
+
+    for (var j = 0; j < codes.length; j++) {
+      var group = vendorGroups[codes[j]];
+      var doc = generateRFQ(group.items);
+      if (!doc.success) { failed++; continue; }
+      var result = await saveDocument('RFQ', doc.line_items, group.vendorInfo);
+      if (result.success) created++;
+      else failed++;
+    }
+
+    if (created > 0) {
+      Utils.showToast(created + ' RFQ' + (created > 1 ? 's' : '') + ' created for ' + codes.length +
+        ' vendor' + (codes.length > 1 ? 's' : '') + (failed > 0 ? '. ' + failed + ' failed.' : '.'), 'success');
+    } else {
+      Utils.showToast('Failed to create RFQs.', 'error');
+    }
+  }
+
+  async function _handleRFQSingleVendor(vendorCode, vendorName) {
+    var doc = generateRFQ(_salesReportData);
+    if (!doc.success) {
+      Utils.showToast(doc.error || 'Failed to generate RFQ.', 'error');
+      return;
+    }
+    var result = await saveDocument('RFQ', doc.line_items, { vendor_code: vendorCode, vendor_name: vendorName });
+    if (result.success) {
+      Utils.showToast('RFQ ' + result.doc_number + ' saved for ' + vendorName + '.', 'success');
+    } else {
+      Utils.showToast(result.error || 'Failed to save RFQ.', 'error');
+    }
+  }
+
   /**
    * Handles RFQ/PO document generation.
    * @param {string} docType - 'RFQ' or 'PO'
@@ -1072,18 +1273,23 @@ var Reports = (function () {
       return;
     }
 
-    var doc = (docType === 'RFQ') ? generateRFQ(_salesReportData) : generatePO(_salesReportData);
-    if (!doc.success) {
-      Utils.showToast(doc.error || 'Failed to generate ' + docType + '.', 'error');
+    if (docType === 'RFQ') {
+      _openRFQModal();
       return;
     }
 
-    // Save the document to Firestore
-    var saveResult = await saveDocument(docType, doc.line_items);
+    // PO: direct generation without vendor dialog
+    var doc = generatePO(_salesReportData);
+    if (!doc.success) {
+      Utils.showToast(doc.error || 'Failed to generate PO.', 'error');
+      return;
+    }
+
+    var saveResult = await saveDocument('PO', doc.line_items, null);
     if (saveResult.success) {
-      Utils.showToast(docType + ' ' + saveResult.doc_number + ' saved successfully.', 'success');
+      Utils.showToast('PO ' + saveResult.doc_number + ' saved successfully.', 'success');
     } else {
-      Utils.showToast(saveResult.error || 'Failed to save ' + docType + '.', 'error');
+      Utils.showToast(saveResult.error || 'Failed to save PO.', 'error');
     }
   }
 
