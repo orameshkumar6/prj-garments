@@ -299,7 +299,8 @@ async function initApp() {
     { name: 'BarcodePrinter', ref: typeof BarcodePrinter !== 'undefined' ? BarcodePrinter : null },
     { name: 'ImportExport', ref: typeof ImportExport !== 'undefined' ? ImportExport : null },
     { name: 'TransactionHistory', ref: typeof TransactionHistory !== 'undefined' ? TransactionHistory : null },
-    { name: 'PurchaseDocs', ref: typeof PurchaseDocs !== 'undefined' ? PurchaseDocs : null },
+    { name: 'PurchaseDocs',   ref: typeof PurchaseDocs   !== 'undefined' ? PurchaseDocs   : null },
+    { name: 'PurchaseOrders', ref: typeof PurchaseOrders !== 'undefined' ? PurchaseOrders : null },
     { name: 'Printer', ref: typeof Printer !== 'undefined' ? Printer : null }
   ];
 

@@ -1,4 +1,4 @@
-var CACHE_NAME = 'prj-garments-v5';
+var CACHE_NAME = 'prj-garments-v6';
 var ASSETS = [
   './',
   './index.html',
@@ -22,6 +22,7 @@ var ASSETS = [
   './js/import-export.js',
   './js/transaction-history.js',
   './js/purchase-docs.js',
+  './js/purchase-orders.js',
   './js/app.js',
   './icons/icon-192.png',
   './icons/icon-512.png'

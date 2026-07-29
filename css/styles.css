@@ -3627,3 +3627,350 @@ textarea::placeholder {
   .rfq-compose-footer { justify-content: stretch; }
   .rfq-compose-footer .btn { flex: 1 1 40%; }
 }
+
+/* ============================================================
+   Purchase Documents — Convert to PO overlay & Replenish mode
+   ============================================================ */
+
+.btn-success {
+  background: var(--color-success);
+  color: #fff;
+  border: none;
+}
+.btn-success:hover,
+.btn-success:focus {
+  background: #1b5e20;
+  outline: none;
+}
+
+/* Convert to PO overlay — full-screen modal on top of detail panel */
+.pd-convert-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 2000;
+  background: rgba(0,0,0,0.55);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+}
+
+.pd-convert-dialog {
+  background: var(--color-surface);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  width: 100%;
+  max-width: 760px;
+  max-height: 88vh;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.pd-convert-header {
+  padding: 16px 20px 10px;
+  border-bottom: 1px solid var(--color-border);
+  flex-shrink: 0;
+}
+
+.pd-convert-title {
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--color-text);
+  margin: 0 0 4px;
+}
+
+.pd-convert-meta {
+  font-size: 0.8rem;
+  color: var(--color-text-secondary);
+  margin: 0;
+}
+
+.pd-convert-dialog .table-wrapper {
+  padding: 12px 20px;
+  overflow: auto;
+  flex: 1 1 auto;
+}
+
+.pd-convert-dialog .pd-detail-total {
+  padding: 8px 20px;
+  text-align: right;
+  font-size: 0.9rem;
+  border-top: 1px solid var(--color-border);
+}
+
+.pd-convert-footer {
+  padding: 12px 20px;
+  border-top: 1px solid var(--color-border);
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  flex-shrink: 0;
+}
+
+/* Replenish info bar shown below total when in replenish mode */
+.pd-replenish-info {
+  margin-top: 10px;
+  padding: 10px 14px;
+  background: #e8f5e9;
+  border: 1px solid #a5d6a7;
+  border-radius: var(--radius);
+  font-size: 0.85rem;
+  color: #2e7d32;
+  line-height: 1.5;
+}
+
+[data-theme="dark"] .pd-replenish-info {
+  background: #1b3a1e;
+  border-color: #388e3c;
+  color: #a5d6a7;
+}
+
+/* ============================================================
+   Purchase Orders Screen — RFQ / PO generation
+   ============================================================ */
+
+.po-screen-body {
+  display: flex;
+  gap: 16px;
+  align-items: flex-start;
+}
+
+.po-search-pane {
+  flex: 0 0 320px;
+  min-width: 0;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
+  padding: 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  max-height: calc(100vh - 160px);
+  overflow-y: auto;
+  position: sticky;
+  top: 50px;
+}
+
+.po-order-pane {
+  flex: 1 1 0;
+  min-width: 0;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
+  padding: 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.po-pane-title {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--color-text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  padding-bottom: 6px;
+  border-bottom: 1px solid var(--color-border);
+}
+
+.po-search-input { width: 100%; }
+
+.po-search-results {
+  overflow-y: auto;
+  max-height: 400px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.po-result-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 8px 10px;
+  border: 1px solid var(--color-border);
+  border-radius: 6px;
+  background: var(--color-bg);
+}
+
+.po-result-info {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.po-result-code {
+  font-weight: 700;
+  font-size: 0.82rem;
+  color: var(--color-text);
+}
+
+.po-result-desc {
+  font-size: 0.78rem;
+  color: var(--color-text-secondary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.po-result-stock {
+  font-size: 0.72rem;
+  color: var(--color-text-secondary);
+}
+
+.po-no-results {
+  font-size: 0.8rem;
+  color: var(--color-text-secondary);
+  text-align: center;
+  padding: 12px;
+}
+
+.po-empty-msg {
+  font-size: 0.85rem;
+  color: var(--color-text-secondary);
+  text-align: center;
+  padding: 24px;
+}
+
+.po-vendor-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.po-label {
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--color-text-secondary);
+  white-space: nowrap;
+}
+
+.po-vendor-select { flex: 1 1 0; }
+
+.po-order-total-row {
+  text-align: right;
+  font-size: 0.9rem;
+  padding: 6px 4px;
+  border-top: 1px solid var(--color-border);
+}
+
+.po-order-footer {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  padding-top: 4px;
+}
+
+/* Compact number inputs inside PO tables */
+.po-qty-input,
+.po-price-input,
+.pd-qty-input,
+.pd-price-input {
+  width: 80px;
+  padding: 4px 6px;
+  font-size: 0.8rem;
+}
+
+/* PO Compose overlay — re-uses same layout as RFQ compose */
+.po-compose-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 2000;
+  background: rgba(0,0,0,0.55);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+}
+
+.po-compose-dialog {
+  background: var(--color-surface);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  width: 100%;
+  max-width: 680px;
+  max-height: 90vh;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.po-compose-header {
+  padding: 14px 18px;
+  border-bottom: 1px solid var(--color-border);
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-shrink: 0;
+}
+
+.po-compose-title {
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--color-text);
+}
+
+.po-compose-vendor-chip {
+  font-size: 0.78rem;
+  background: var(--color-primary);
+  color: #fff;
+  border-radius: 12px;
+  padding: 2px 10px;
+  flex-shrink: 0;
+}
+
+.po-compose-body {
+  padding: 14px 18px;
+  overflow-y: auto;
+  flex: 1 1 auto;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.po-compose-textarea {
+  width: 100%;
+  resize: vertical;
+  font-size: 0.85rem;
+  padding: 8px 10px;
+  border: 1px solid var(--color-border);
+  border-radius: 6px;
+  background: var(--color-bg);
+  color: var(--color-text);
+  font-family: var(--font-family);
+}
+
+.po-compose-preview {
+  border: 1px solid var(--color-border);
+  border-radius: 6px;
+  overflow: hidden;
+  max-height: 220px;
+  overflow-y: auto;
+}
+
+.po-compose-footer {
+  padding: 12px 18px;
+  border-top: 1px solid var(--color-border);
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  flex-shrink: 0;
+}
+
+@media (max-width: 680px) {
+  .po-screen-body {
+    flex-direction: column;
+  }
+  .po-search-pane {
+    flex: none;
+    width: 100%;
+    max-height: 340px;
+    position: static;
+  }
+  .pd-convert-footer { flex-direction: column; }
+  .po-compose-footer { justify-content: stretch; }
+  .po-compose-footer .btn { flex: 1 1 40%; }
+}

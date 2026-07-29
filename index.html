@@ -110,6 +110,12 @@
                     </a>
                 </li>
                 <li>
+                    <a href="#purchase-orders" class="nav-item" data-screen="purchase-orders">
+                        <span class="nav-icon">🛒</span>
+                        <span class="nav-label">New RFQ / PO</span>
+                    </a>
+                </li>
+                <li>
                     <a href="#import-export" class="nav-item" data-screen="import-export">
                         <span class="nav-icon">📤</span>
                         <span class="nav-label">Import / Export</span>
@@ -218,6 +224,13 @@
                     </div>
                 </section>
 
+                <!-- Purchase Orders Screen (Generate RFQ / PO) -->
+                <section id="screen-purchase-orders" class="screen" aria-label="New RFQ / PO" hidden>
+                    <div class="screen-content">
+                        <p class="placeholder-text">Purchase Orders module loading...</p>
+                    </div>
+                </section>
+
                 <!-- Import/Export Screen -->
                 <section id="screen-import-export" class="screen" aria-label="Import and Export" hidden>
                     <div class="screen-content">
@@ -276,6 +289,7 @@
     <script src="js/import-export.js"></script>
     <script src="js/transaction-history.js"></script>
     <script src="js/purchase-docs.js"></script>
+    <script src="js/purchase-orders.js"></script>
     <script src="js/app.js"></script>
 </body>
 </html>
