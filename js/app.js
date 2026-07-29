@@ -1,10 +1,5 @@
 // Application Shell - Initialization, Service Worker Registration, Hash Router, and Mobile Sidebar
-// This is the main initialization script (NOT an IIFE module - runs global functions on load)
 
-/**
- * Register the service worker for offline PWA support.
- * Caches static assets for offline access.
- */
 function registerServiceWorker() {
   if ('serviceWorker' in navigator) {
     navigator.serviceWorker.register('./sw.js')
@@ -17,26 +12,17 @@ function registerServiceWorker() {
   }
 }
 
-/**
- * Navigate to a screen by its screenId.
- * Hides all .screen sections, shows the target screen (id="screen-{screenId}"),
- * updates the active nav item, and updates the .screen-title text.
- * @param {string} screenId - The screen identifier (e.g., "inventory", "billing")
- */
 function navigateToScreen(screenId) {
-  // Hide all screen sections
   var screens = document.querySelectorAll('.screen');
   screens.forEach(function(screen) {
     screen.setAttribute('hidden', '');
   });
 
-  // Show the target screen
   var targetScreen = document.getElementById('screen-' + screenId);
   if (targetScreen) {
     targetScreen.removeAttribute('hidden');
   }
 
-  // Update active nav item
   var navItems = document.querySelectorAll('.nav-item');
   navItems.forEach(function(item) {
     if (item.getAttribute('data-screen') === screenId) {
@@ -48,15 +34,12 @@ function navigateToScreen(screenId) {
     }
   });
 
-  // Update screen title text
   var screenTitle = document.getElementById('screen-title');
   if (screenTitle && targetScreen) {
-    // Use the aria-label of the target screen, or format the screenId as a title
     var label = targetScreen.getAttribute('aria-label');
     if (label) {
       screenTitle.textContent = label;
     } else {
-      // Fallback: capitalize and format screenId (e.g., "sales-report" → "Sales Report")
       screenTitle.textContent = screenId
         .split('-')
         .map(function(word) { return word.charAt(0).toUpperCase() + word.slice(1); })
@@ -65,10 +48,6 @@ function navigateToScreen(screenId) {
   }
 }
 
-/**
- * Set up hash-based router.
- * Listens on hashchange event, calls navigateToScreen based on the current hash.
- */
 function setupHashRouter() {
   window.addEventListener('hashchange', function() {
     var hash = window.location.hash.replace('#', '');
@@ -78,12 +57,6 @@ function setupHashRouter() {
   });
 }
 
-/**
- * Set up sidebar mobile toggle functionality.
- * - #hamburger-btn opens sidebar (adds .open class to #sidebar, shows backdrop)
- * - #sidebar-close-btn and #sidebar-backdrop close sidebar
- * - Clicking a nav item on mobile also closes sidebar
- */
 function setupSidebarToggle() {
   var sidebar = document.getElementById('sidebar');
   var hamburgerBtn = document.getElementById('hamburger-btn');
@@ -91,9 +64,7 @@ function setupSidebarToggle() {
   var sidebarBackdrop = document.getElementById('sidebar-backdrop');
 
   function openSidebar() {
-    if (sidebar) {
-      sidebar.classList.add('open');
-    }
+    if (sidebar) sidebar.classList.add('open');
     if (sidebarBackdrop) {
       sidebarBackdrop.removeAttribute('hidden');
       sidebarBackdrop.classList.add('visible');
@@ -101,41 +72,22 @@ function setupSidebarToggle() {
   }
 
   function closeSidebar() {
-    if (sidebar) {
-      sidebar.classList.remove('open');
-    }
+    if (sidebar) sidebar.classList.remove('open');
     if (sidebarBackdrop) {
       sidebarBackdrop.classList.remove('visible');
       sidebarBackdrop.setAttribute('hidden', '');
     }
   }
 
-  if (hamburgerBtn) {
-    hamburgerBtn.addEventListener('click', openSidebar);
-  }
+  if (hamburgerBtn) hamburgerBtn.addEventListener('click', openSidebar);
+  if (sidebarCloseBtn) sidebarCloseBtn.addEventListener('click', closeSidebar);
+  if (sidebarBackdrop) sidebarBackdrop.addEventListener('click', closeSidebar);
 
-  if (sidebarCloseBtn) {
-    sidebarCloseBtn.addEventListener('click', closeSidebar);
-  }
-
-  if (sidebarBackdrop) {
-    sidebarBackdrop.addEventListener('click', closeSidebar);
-  }
-
-  // Clicking a nav item on mobile closes the sidebar
-  var navItems = document.querySelectorAll('.nav-item');
-  navItems.forEach(function(item) {
-    item.addEventListener('click', function() {
-      closeSidebar();
-    });
+  document.querySelectorAll('.nav-item').forEach(function(item) {
+    item.addEventListener('click', function() { closeSidebar(); });
   });
 }
 
-/**
- * Set up the sync status banner with online/offline state and a Sync Now button.
- * Sync phases: (1) waitForPendingWrites — push local writes to Firebase,
- *              (2) disableNetwork + enableNetwork — pull fresh data from Firebase.
- */
 function setupConnectionIndicator() {
   var banner     = document.getElementById('sync-banner');
   var iconEl     = document.getElementById('sync-status-icon');
@@ -206,131 +158,182 @@ function setupConnectionIndicator() {
   }
 
   if (syncBtn) syncBtn.addEventListener('click', _handleSync);
-
-  // Refresh "X min ago" label every minute
   setInterval(_formatLastSync, 60000);
 
   if (typeof DataLayer !== 'undefined' && DataLayer.onConnectionChange) {
     DataLayer.onConnectionChange(_updateBanner);
   }
 
-  // Initialise banner state
   _updateBanner(navigator.onLine);
 }
 
-/**
- * Initialize the application.
- * Orchestrates the full startup sequence:
- * 1. Initialize Firebase
- * 2. Initialize Data Layer
- * 3. Register Service Worker
- * 4. Initialize optional core modules (ThemeEngine, Settings)
- * 5. Initialize feature modules
- * 6. Set up hash router and navigate to default screen
- * 7. Set up offline/online indicator
- */
-async function initApp() {
-  // 1. Initialize Firebase
-  if (typeof FirebaseConfig !== 'undefined' && FirebaseConfig.init) {
-    try {
-      await FirebaseConfig.init();
-    } catch (error) {
-      console.error('Firebase initialization error:', error);
-    }
-  }
+// ─── Auth helpers ────────────────────────────────────────────────────────────
 
-  // 2. If Firebase init failed, show error screen and stop
-  if (typeof FirebaseConfig !== 'undefined' && !FirebaseConfig.isInitialized()) {
-    var errorScreen = document.getElementById('firebase-error-screen');
-    var errorMessage = document.getElementById('firebase-error-message');
-    var appContainer = document.getElementById('app-container');
+function _showLoginScreen() {
+  var loginScreen  = document.getElementById('login-screen');
+  var appContainer = document.getElementById('app-container');
+  var syncBanner   = document.getElementById('sync-banner');
+  if (loginScreen)  loginScreen.hidden  = false;
+  if (appContainer) appContainer.hidden = true;
+  if (syncBanner)   syncBanner.hidden   = true;
+}
 
-    if (errorScreen) {
-      errorScreen.removeAttribute('hidden');
-    }
-    if (errorMessage && FirebaseConfig.getError()) {
-      errorMessage.textContent = FirebaseConfig.getError().message;
-    }
-    if (appContainer) {
-      appContainer.setAttribute('hidden', '');
-    }
+function _hideLoginScreen() {
+  var loginScreen  = document.getElementById('login-screen');
+  var appContainer = document.getElementById('app-container');
+  var syncBanner   = document.getElementById('sync-banner');
+  if (loginScreen)  loginScreen.hidden  = true;
+  if (appContainer) appContainer.hidden = false;
+  if (syncBanner)   syncBanner.hidden   = false;
+}
+
+function _updateBannerUser(user) {
+  var nameEl    = document.getElementById('banner-user-name');
+  var userEl    = document.getElementById('banner-user');
+  var logoutBtn = document.getElementById('banner-logout-btn');
+  if (!user) {
+    if (userEl) userEl.hidden = true;
     return;
   }
+  var displayName = (user.displayName) ||
+    (user.email ? user.email.split('@')[0] : '');
+  if (nameEl) nameEl.textContent = displayName;
+  if (userEl) userEl.hidden = false;
+  if (logoutBtn && !logoutBtn._bound) {
+    logoutBtn._bound = true;
+    logoutBtn.addEventListener('click', async function () {
+      if (typeof Auth !== 'undefined') await Auth.logout();
+      window.location.reload();
+    });
+  }
+}
 
-  // 3. Initialize Data Layer
-  if (typeof DataLayer !== 'undefined' && DataLayer.init) {
-    try {
-      await DataLayer.init();
-    } catch (error) {
-      console.error('DataLayer initialization failed:', error);
+function _attachLoginFormHandler() {
+  var form = document.getElementById('login-form');
+  if (!form) return;
+  form.addEventListener('submit', async function (e) {
+    e.preventDefault();
+    var emailEl    = document.getElementById('login-email');
+    var passEl     = document.getElementById('login-password');
+    var errEl      = document.getElementById('login-error');
+    var submitBtn  = document.getElementById('login-submit-btn');
+    var email      = (emailEl    ? emailEl.value.trim() : '');
+    var password   = (passEl     ? passEl.value        : '');
+
+    if (errEl) errEl.hidden = true;
+    if (submitBtn) { submitBtn.disabled = true; submitBtn.textContent = 'Signing in…'; }
+
+    var result = await Auth.login(email, password);
+
+    if (result.success) {
+      _hideLoginScreen();
+      _updateBannerUser(result.user);
+      if (!_appBooted) await _bootApp();
+    } else {
+      if (errEl) { errEl.textContent = result.error; errEl.hidden = false; }
+      if (submitBtn) { submitBtn.disabled = false; submitBtn.textContent = 'Sign In'; }
     }
+  });
+}
+
+// ─── Module boot (runs after auth confirmed) ─────────────────────────────────
+
+var _appBooted = false;
+
+async function _bootApp() {
+  if (_appBooted) return;
+  _appBooted = true;
+
+  if (typeof DataLayer !== 'undefined' && DataLayer.init) {
+    try { await DataLayer.init(); } catch (e) { console.error('DataLayer init failed:', e); }
   }
 
-  // 4. Register Service Worker
   registerServiceWorker();
 
-  // 5. Initialize optional core modules (ThemeEngine, Settings)
   if (typeof ThemeEngine !== 'undefined' && ThemeEngine.init) {
-    try {
-      ThemeEngine.init();
-    } catch (error) {
-      console.error('ThemeEngine initialization failed:', error);
-    }
+    try { ThemeEngine.init(); } catch (e) { console.error('ThemeEngine init failed:', e); }
   }
 
   if (typeof Settings !== 'undefined' && Settings.init) {
-    try {
-      await Settings.init();
-    } catch (error) {
-      console.error('Settings initialization failed:', error);
-    }
+    try { await Settings.init(); } catch (e) { console.error('Settings init failed:', e); }
   }
 
-  // 6. Initialize all feature modules (wrap each in try/catch)
   var featureModules = [
-    { name: 'Inventory', ref: typeof Inventory !== 'undefined' ? Inventory : null },
-    { name: 'Vendor', ref: typeof Vendor !== 'undefined' ? Vendor : null },
-    { name: 'Billing', ref: typeof Billing !== 'undefined' ? Billing : null },
-    { name: 'SalesEngine', ref: typeof SalesEngine !== 'undefined' ? SalesEngine : null },
-    { name: 'Reports', ref: typeof Reports !== 'undefined' ? Reports : null },
-    { name: 'ExpenseTracker', ref: typeof ExpenseTracker !== 'undefined' ? ExpenseTracker : null },
-    { name: 'Employee', ref: typeof Employee !== 'undefined' ? Employee : null },
-    { name: 'Attendance', ref: typeof Attendance !== 'undefined' ? Attendance : null },
-    { name: 'BarcodePrinter', ref: typeof BarcodePrinter !== 'undefined' ? BarcodePrinter : null },
-    { name: 'ImportExport', ref: typeof ImportExport !== 'undefined' ? ImportExport : null },
+    { name: 'Inventory',          ref: typeof Inventory          !== 'undefined' ? Inventory          : null },
+    { name: 'Vendor',             ref: typeof Vendor             !== 'undefined' ? Vendor             : null },
+    { name: 'Billing',            ref: typeof Billing            !== 'undefined' ? Billing            : null },
+    { name: 'SalesEngine',        ref: typeof SalesEngine        !== 'undefined' ? SalesEngine        : null },
+    { name: 'Reports',            ref: typeof Reports            !== 'undefined' ? Reports            : null },
+    { name: 'ExpenseTracker',     ref: typeof ExpenseTracker     !== 'undefined' ? ExpenseTracker     : null },
+    { name: 'Employee',           ref: typeof Employee           !== 'undefined' ? Employee           : null },
+    { name: 'Attendance',         ref: typeof Attendance         !== 'undefined' ? Attendance         : null },
+    { name: 'BarcodePrinter',     ref: typeof BarcodePrinter     !== 'undefined' ? BarcodePrinter     : null },
+    { name: 'ImportExport',       ref: typeof ImportExport       !== 'undefined' ? ImportExport       : null },
     { name: 'TransactionHistory', ref: typeof TransactionHistory !== 'undefined' ? TransactionHistory : null },
-    { name: 'PurchaseDocs',   ref: typeof PurchaseDocs   !== 'undefined' ? PurchaseDocs   : null },
-    { name: 'PurchaseOrders', ref: typeof PurchaseOrders !== 'undefined' ? PurchaseOrders : null },
-    { name: 'Printer', ref: typeof Printer !== 'undefined' ? Printer : null }
+    { name: 'PurchaseDocs',       ref: typeof PurchaseDocs       !== 'undefined' ? PurchaseDocs       : null },
+    { name: 'PurchaseOrders',     ref: typeof PurchaseOrders     !== 'undefined' ? PurchaseOrders     : null },
+    { name: 'Printer',            ref: typeof Printer            !== 'undefined' ? Printer            : null }
   ];
 
-  featureModules.forEach(function(mod) {
+  featureModules.forEach(function (mod) {
     if (mod.ref && mod.ref.init) {
-      try {
-        mod.ref.init();
-      } catch (error) {
-        console.error(mod.name + ' initialization failed:', error);
-      }
+      try { mod.ref.init(); } catch (e) { console.error(mod.name + ' init failed:', e); }
     }
   });
 
-  // 7. Set up hash router
   setupHashRouter();
-
-  // 8. Set up sidebar mobile toggle
   setupSidebarToggle();
 
-  // 9. Navigate to default screen (#inventory) or the current hash
   var currentHash = window.location.hash.replace('#', '');
-  if (currentHash) {
-    navigateToScreen(currentHash);
-  } else {
-    navigateToScreen('inventory');
-  }
+  navigateToScreen(currentHash || 'inventory');
 
-  // 10. Set up offline/online indicator
   setupConnectionIndicator();
 }
 
-// Call initApp() on DOMContentLoaded
+// ─── App entry point ─────────────────────────────────────────────────────────
+
+async function initApp() {
+  // 1. Initialize Firebase
+  if (typeof FirebaseConfig !== 'undefined' && FirebaseConfig.init) {
+    try { await FirebaseConfig.init(); } catch (e) { console.error('Firebase init error:', e); }
+  }
+
+  // 2. If Firebase failed, show error screen
+  if (typeof FirebaseConfig !== 'undefined' && !FirebaseConfig.isInitialized()) {
+    var errorScreen  = document.getElementById('firebase-error-screen');
+    var errorMessage = document.getElementById('firebase-error-message');
+    var appContainer = document.getElementById('app-container');
+    var loginScreen  = document.getElementById('login-screen');
+    if (loginScreen)  loginScreen.hidden  = true;
+    if (errorScreen)  errorScreen.removeAttribute('hidden');
+    if (errorMessage && FirebaseConfig.getError()) errorMessage.textContent = FirebaseConfig.getError().message;
+    if (appContainer) appContainer.setAttribute('hidden', '');
+    return;
+  }
+
+  // 3. Wait for current auth state (fast — from IndexedDB)
+  var user = null;
+  if (typeof Auth !== 'undefined' && Auth.waitForUser) {
+    try { user = await Auth.waitForUser(); } catch (e) { /* continue */ }
+  }
+
+  // 4. Listen for future logout (after boot, reload to show login)
+  if (typeof Auth !== 'undefined' && Auth.onAuthStateChange) {
+    Auth.onAuthStateChange(function (u) {
+      if (!u && _appBooted) window.location.reload();
+    });
+  }
+
+  if (!user) {
+    _showLoginScreen();
+    _attachLoginFormHandler();
+    return;
+  }
+
+  // 5. Already authenticated — show the app
+  _hideLoginScreen();
+  _updateBannerUser(user);
+  await _bootApp();
+}
+
 document.addEventListener('DOMContentLoaded', initApp);

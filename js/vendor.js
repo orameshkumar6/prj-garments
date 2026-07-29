@@ -43,6 +43,15 @@ var Vendor = (function () {
       errors.push('Address must not exceed 300 characters.');
     }
 
+    if (data.gst_number && data.gst_number.trim().length > 0) {
+      var gst = data.gst_number.trim().toUpperCase();
+      if (gst.length !== 15) {
+        errors.push('GST number must be exactly 15 characters.');
+      } else if (!/^[0-9]{2}[A-Z]{5}[0-9]{4}[A-Z]{1}[1-9A-Z]{1}Z[0-9A-Z]{1}$/.test(gst)) {
+        errors.push('GST number format is invalid (e.g. 27AAPFU0939F1ZV).');
+      }
+    }
+
     return { valid: errors.length === 0, errors: errors };
   }
 
@@ -69,6 +78,7 @@ var Vendor = (function () {
         name: data.name.trim(),
         phone: (data.phone || '').trim(),
         address: (data.address || '').trim(),
+        gst_number: (data.gst_number || '').trim().toUpperCase(),
         created_at: new Date().toISOString(),
         updated_at: new Date().toISOString()
       });
@@ -107,6 +117,7 @@ var Vendor = (function () {
         name: data.name.trim(),
         phone: (data.phone || '').trim(),
         address: (data.address || '').trim(),
+        gst_number: (data.gst_number || '').trim().toUpperCase(),
         updated_at: new Date().toISOString()
       });
       return { success: true };
@@ -160,6 +171,7 @@ var Vendor = (function () {
             '<th>Vendor Code</th>' +
             '<th>Name</th>' +
             '<th>Phone</th>' +
+            '<th>GST No.</th>' +
             '<th>Address</th>' +
             '<th>Actions</th>' +
           '</tr></thead>' +
@@ -190,6 +202,12 @@ var Vendor = (function () {
             '<div class="form-row">' +
               '<label for="vnd-f-phone">Phone</label>' +
               '<input type="tel" id="vnd-f-phone" maxlength="20" placeholder="Optional">' +
+            '</div>' +
+            '<div class="form-row">' +
+              '<label for="vnd-f-gst">GST Number</label>' +
+              '<input type="text" id="vnd-f-gst" maxlength="15" ' +
+                'placeholder="e.g. 27AAPFU0939F1ZV (optional)">' +
+              '<span class="field-error" id="vnd-err-gst"></span>' +
             '</div>' +
             '<div class="form-row">' +
               '<label for="vnd-f-address">Address</label>' +
@@ -273,6 +291,7 @@ var Vendor = (function () {
       html += '<td><strong>' + Utils.escapeHtml(v.vendor_code || '') + '</strong></td>';
       html += '<td>' + Utils.escapeHtml(v.name || '') + '</td>';
       html += '<td>' + Utils.escapeHtml(v.phone || '') + '</td>';
+      html += '<td>' + Utils.escapeHtml(v.gst_number || '') + '</td>';
       html += '<td title="' + Utils.escapeHtml(address) + '">' + Utils.escapeHtml(addressDisplay) + '</td>';
       html += '<td class="actions-cell">';
       html += '<button type="button" class="btn-icon-sm edit vnd-btn-edit" data-id="' +
@@ -302,9 +321,10 @@ var Vendor = (function () {
         if (_allVendors[i].id === vendorId) { vendor = _allVendors[i]; break; }
       }
       if (vendor) {
-        document.getElementById('vnd-f-code').value = vendor.vendor_code || '';
-        document.getElementById('vnd-f-name').value = vendor.name || '';
-        document.getElementById('vnd-f-phone').value = vendor.phone || '';
+        document.getElementById('vnd-f-code').value    = vendor.vendor_code || '';
+        document.getElementById('vnd-f-name').value    = vendor.name || '';
+        document.getElementById('vnd-f-phone').value   = vendor.phone || '';
+        document.getElementById('vnd-f-gst').value     = vendor.gst_number || '';
         document.getElementById('vnd-f-address').value = vendor.address || '';
       }
     } else {
@@ -324,8 +344,10 @@ var Vendor = (function () {
   function _clearErrors() {
     var codeErr = document.getElementById('vnd-err-code');
     var nameErr = document.getElementById('vnd-err-name');
+    var gstErr  = document.getElementById('vnd-err-gst');
     if (codeErr) codeErr.textContent = '';
     if (nameErr) nameErr.textContent = '';
+    if (gstErr)  gstErr.textContent  = '';
   }
 
   // ─── Form Handler ────────────────────────────────────────────────────────────
@@ -335,9 +357,10 @@ var Vendor = (function () {
 
     var data = {
       vendor_code: document.getElementById('vnd-f-code').value,
-      name: document.getElementById('vnd-f-name').value,
-      phone: document.getElementById('vnd-f-phone').value,
-      address: document.getElementById('vnd-f-address').value
+      name:        document.getElementById('vnd-f-name').value,
+      phone:       document.getElementById('vnd-f-phone').value,
+      gst_number:  document.getElementById('vnd-f-gst').value,
+      address:     document.getElementById('vnd-f-address').value
     };
 
     var result;
@@ -361,6 +384,9 @@ var Vendor = (function () {
         } else if (msg.indexOf('name') !== -1) {
           var nameEl = document.getElementById('vnd-err-name');
           if (nameEl) nameEl.textContent = errors[i];
+        } else if (msg.indexOf('gst') !== -1) {
+          var gstEl = document.getElementById('vnd-err-gst');
+          if (gstEl) gstEl.textContent = errors[i];
         }
       }
       Utils.showToast(errors[0] || 'Failed to save vendor.', 'error');

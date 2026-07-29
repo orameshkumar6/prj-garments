@@ -316,7 +316,10 @@ body {
 /* --- Sidebar Backdrop (Mobile) --- */
 .sidebar-backdrop {
   position: fixed;
-  inset: 0;
+  top: 30px; /* below sync-banner */
+  left: 0;
+  right: 0;
+  bottom: 0;
   background-color: rgba(0, 0, 0, 0.5);
   z-index: 999;
   opacity: 0;
@@ -3072,7 +3075,10 @@ textarea::placeholder {
 /* ── Replenish Screen ─────────────────────────────────────────────────────── */
 .inv-replenish-screen {
   position: fixed;
-  inset: 0;
+  top: 30px; /* below sync-banner */
+  left: 0;
+  right: 0;
+  bottom: 0;
   background: var(--color-bg);
   z-index: 9000;
   display: flex;
@@ -3979,4 +3985,112 @@ textarea::placeholder {
   .pd-convert-footer { flex-direction: column; }
   .po-compose-footer { justify-content: stretch; }
   .po-compose-footer .btn { flex: 1 1 40%; }
+}
+
+/* ============================================
+   Login Screen
+   ============================================ */
+
+.login-screen {
+  position: fixed;
+  inset: 0;
+  z-index: 10001;
+  background: var(--color-bg);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+}
+
+.login-screen[hidden] {
+  display: none;
+}
+
+.login-card {
+  background: var(--color-surface);
+  border-radius: var(--radius);
+  padding: 36px 28px 28px;
+  box-shadow: var(--shadow);
+  width: 100%;
+  max-width: 380px;
+}
+
+.login-brand {
+  text-align: center;
+  margin-bottom: 24px;
+}
+
+.login-brand-icon {
+  font-size: 2.5rem;
+  display: block;
+  margin-bottom: 6px;
+}
+
+.login-brand h1 {
+  font-size: 1.4rem;
+  font-weight: 700;
+  color: var(--color-primary);
+  margin: 0;
+}
+
+.login-card h2 {
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--color-text-secondary);
+  margin: 0 0 20px;
+}
+
+.login-error {
+  color: var(--color-error);
+  font-size: 0.85rem;
+  padding: 8px 12px;
+  background: rgba(211, 47, 47, 0.08);
+  border-radius: 4px;
+  margin-bottom: 12px;
+}
+
+.login-error[hidden] {
+  display: none;
+}
+
+.login-submit-btn {
+  width: 100%;
+  margin-top: 8px;
+}
+
+/* ============================================
+   Banner User Display
+   ============================================ */
+
+.banner-user {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-shrink: 0;
+  margin-right: 4px;
+  border-right: 1px solid rgba(0,0,0,0.15);
+  padding-right: 8px;
+}
+
+.banner-user[hidden] {
+  display: none;
+}
+
+.banner-user-name {
+  font-size: 0.75rem;
+  font-weight: 600;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 120px;
+}
+
+.btn-logout {
+  font-size: 0.7rem;
+  padding: 2px 8px;
+  opacity: 0.85;
+}
+
+.btn-logout:hover {
+  opacity: 1;
 }

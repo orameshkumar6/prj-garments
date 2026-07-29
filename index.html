@@ -16,12 +16,41 @@
     <title>Prj-Garments</title>
 </head>
 <body>
-    <!-- Sync Status Banner -->
-    <div id="sync-banner" class="sync-banner sync-banner--online">
+    <!-- Login Screen (shown until authenticated) -->
+    <div id="login-screen" class="login-screen">
+        <div class="login-card">
+            <div class="login-brand">
+                <span class="login-brand-icon">👔</span>
+                <h1>Prj-Garments</h1>
+            </div>
+            <h2>Sign In</h2>
+            <form id="login-form" novalidate>
+                <div class="form-row">
+                    <label for="login-email">Email</label>
+                    <input type="email" id="login-email" autocomplete="email"
+                        placeholder="admin@garments.com" value="admin@garments.com">
+                </div>
+                <div class="form-row">
+                    <label for="login-password">Password</label>
+                    <input type="password" id="login-password" autocomplete="current-password"
+                        placeholder="Password">
+                </div>
+                <div id="login-error" class="login-error" hidden></div>
+                <button type="submit" id="login-submit-btn" class="btn btn-primary login-submit-btn">Sign In</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Sync Status Banner (hidden until authenticated) -->
+    <div id="sync-banner" class="sync-banner sync-banner--online" hidden>
         <span class="sync-banner-left">
             <span id="sync-status-icon" class="sync-status-icon"></span>
             <span id="sync-status-text" class="sync-status-text">Online</span>
             <span id="sync-last-time" class="sync-last-time"></span>
+        </span>
+        <span id="banner-user" class="banner-user" hidden>
+            <span id="banner-user-name" class="banner-user-name"></span>
+            <button id="banner-logout-btn" type="button" class="btn-sync btn-logout">Sign Out</button>
         </span>
         <button id="sync-now-btn" class="btn-sync" type="button">Sync Now</button>
     </div>
@@ -34,8 +63,8 @@
         </div>
     </div>
 
-    <!-- App Container -->
-    <div id="app-container" class="app-container">
+    <!-- App Container (hidden until authenticated) -->
+    <div id="app-container" class="app-container" hidden>
         <!-- Sidebar Navigation (Desktop) / Hamburger Menu (Mobile) -->
         <nav id="sidebar" class="sidebar" aria-label="Main navigation">
             <div class="sidebar-header">
@@ -265,6 +294,7 @@
     <!-- Firebase SDK (Compat CDN for no-build-tool usage) -->
     <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
 
     <!-- Third-party Libraries -->
     <script src="https://cdn.jsdelivr.net/npm/jsbarcode@3.11.6/dist/JsBarcode.all.min.js"></script>
@@ -290,6 +320,7 @@
     <script src="js/transaction-history.js"></script>
     <script src="js/purchase-docs.js"></script>
     <script src="js/purchase-orders.js"></script>
+    <script src="js/auth.js"></script>
     <script src="js/app.js"></script>
 </body>
 </html>
