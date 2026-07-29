@@ -228,6 +228,7 @@ async function initApp() {
   // 6. Initialize all feature modules (wrap each in try/catch)
   var featureModules = [
     { name: 'Inventory', ref: typeof Inventory !== 'undefined' ? Inventory : null },
+    { name: 'Vendor', ref: typeof Vendor !== 'undefined' ? Vendor : null },
     { name: 'Billing', ref: typeof Billing !== 'undefined' ? Billing : null },
     { name: 'SalesEngine', ref: typeof SalesEngine !== 'undefined' ? SalesEngine : null },
     { name: 'Reports', ref: typeof Reports !== 'undefined' ? Reports : null },

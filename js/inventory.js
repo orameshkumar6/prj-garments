@@ -12,6 +12,8 @@ var Inventory = (function () {
   var _currentEditId = null;
   var _allItems = [];
   var _filteredItems = [];
+  var _replenishList = [];
+  var _addingForReplenish = false;
 
   // ─── Constants ──────────────────────────────────────────────────────────────
 
@@ -542,9 +544,6 @@ var Inventory = (function () {
         '<button type="button" id="inv-btn-replenish" class="btn btn-secondary">' +
           '📦 Replenish' +
         '</button>' +
-        '<button type="button" id="inv-btn-reorder-config" class="btn btn-secondary">' +
-          '🔄 Reorder' +
-        '</button>' +
         '<button type="button" id="inv-btn-load-defaults" class="btn btn-secondary">' +
           '📥 Load Samples' +
         '</button>' +
@@ -569,10 +568,8 @@ var Inventory = (function () {
       '</div>' +
       '<!-- Add/Edit Modal -->' +
       _buildItemModal() +
-      '<!-- Replenishment Modal -->' +
-      _buildReplenishModal() +
-      '<!-- Reorder Config Modal -->' +
-      _buildReorderModal();
+      '<!-- Replenishment Screen -->' +
+      _buildReplenishScreen();
   }
 
   /**
@@ -596,7 +593,8 @@ var Inventory = (function () {
             '</div>' +
             '<div class="form-row">' +
               '<label for="inv-f-vendor-code">Vendor Code *</label>' +
-              '<input type="text" id="inv-f-vendor-code" maxlength="20" required>' +
+              '<input type="text" id="inv-f-vendor-code" maxlength="20" required list="inv-vendor-datalist">' +
+              '<datalist id="inv-vendor-datalist"></datalist>' +
               '<span class="field-error" id="inv-err-vendor-code"></span>' +
             '</div>' +
             '<div class="form-row">' +
@@ -624,6 +622,14 @@ var Inventory = (function () {
               '<input type="number" id="inv-f-quantity" min="0" step="1" required>' +
               '<span class="field-error" id="inv-err-quantity"></span>' +
             '</div>' +
+            '<div class="form-row">' +
+              '<label for="inv-f-reorder-level">Reorder Level</label>' +
+              '<input type="number" id="inv-f-reorder-level" min="1" max="99999" step="1" placeholder="Optional">' +
+            '</div>' +
+            '<div class="form-row">' +
+              '<label for="inv-f-reorder-qty">Reorder Quantity</label>' +
+              '<input type="number" id="inv-f-reorder-qty" min="1" max="99999" step="1" placeholder="Optional">' +
+            '</div>' +
             '<div class="form-actions">' +
               '<button type="submit" class="btn btn-primary">Save</button>' +
               '<button type="button" class="btn btn-cancel" id="inv-btn-cancel-item">Cancel</button>' +
@@ -634,79 +640,40 @@ var Inventory = (function () {
   }
 
   /**
-   * Builds the replenishment modal HTML.
+   * Builds the full-screen replenishment overlay HTML.
    * @private
    */
-  function _buildReplenishModal() {
+  function _buildReplenishScreen() {
     return '' +
-      '<div id="inv-replenish-modal" class="modal-overlay" hidden>' +
-        '<div class="modal-dialog" role="dialog" aria-modal="true" aria-labelledby="inv-replenish-title">' +
-          '<h3 id="inv-replenish-title">Replenish Stock</h3>' +
-          '<form id="inv-replenish-form" novalidate>' +
-            '<div class="form-row">' +
-              '<label for="inv-r-item-code">Item Code *</label>' +
-              '<input type="text" id="inv-r-item-code" required>' +
-              '<span class="field-error" id="inv-err-r-item-code"></span>' +
-            '</div>' +
-            '<div class="form-row">' +
-              '<label for="inv-r-batch-code">Batch Code *</label>' +
-              '<input type="text" id="inv-r-batch-code" maxlength="20" required>' +
-              '<span class="field-error" id="inv-err-r-batch-code"></span>' +
-            '</div>' +
-            '<div class="form-row">' +
-              '<label for="inv-r-vendor-code">Vendor Code *</label>' +
-              '<input type="text" id="inv-r-vendor-code" maxlength="20" required>' +
-              '<span class="field-error" id="inv-err-r-vendor-code"></span>' +
-            '</div>' +
-            '<div class="form-row">' +
-              '<label for="inv-r-quantity">Quantity *</label>' +
-              '<input type="number" id="inv-r-quantity" min="1" max="99999" step="1" required>' +
-              '<span class="field-error" id="inv-err-r-quantity"></span>' +
-            '</div>' +
-            '<div class="form-actions">' +
-              '<button type="submit" class="btn btn-primary">Replenish</button>' +
-              '<button type="button" class="btn btn-cancel" id="inv-btn-cancel-replenish">Cancel</button>' +
-            '</div>' +
-          '</form>' +
+      '<div id="inv-replenish-screen" class="inv-replenish-screen" hidden>' +
+        '<div class="inv-replenish-screen-header">' +
+          '<h3>Replenish Stock</h3>' +
+          '<button type="button" id="inv-replenish-close" class="btn btn-cancel" aria-label="Close">✕ Close</button>' +
         '</div>' +
-      '</div>';
-  }
-
-  /**
-   * Builds the reorder config modal HTML.
-   * @private
-   */
-  function _buildReorderModal() {
-    return '' +
-      '<div id="inv-reorder-modal" class="modal-overlay" hidden>' +
-        '<div class="modal-dialog" role="dialog" aria-modal="true" aria-labelledby="inv-reorder-title">' +
-          '<h3 id="inv-reorder-title">Reorder Configuration</h3>' +
-          '<form id="inv-reorder-form" novalidate>' +
-            '<div class="form-row">' +
-              '<label for="inv-ro-category">Category *</label>' +
-              '<input type="text" id="inv-ro-category" required>' +
-              '<span class="field-error" id="inv-err-ro-category"></span>' +
+        '<div class="inv-replenish-body">' +
+          '<div class="inv-replenish-search-pane">' +
+            '<div class="inv-replenish-pane-title">Search Items</div>' +
+            '<input type="text" id="inv-rs-search" class="inv-rs-search-input" placeholder="Search by code, type, brand, vendor...">' +
+            '<div id="inv-rs-results" class="inv-rs-results"></div>' +
+            '<button type="button" id="inv-rs-create-new" class="btn btn-secondary" style="width:100%">➕ Create New Item</button>' +
+          '</div>' +
+          '<div class="inv-replenish-list-pane">' +
+            '<div class="inv-replenish-pane-title">To Be Confirmed</div>' +
+            '<div id="inv-rs-list-container" class="inv-rs-list-container">' +
+              '<p id="inv-rs-empty" class="inv-rs-empty-msg">No items added yet. Search and add items on the left.</p>' +
+              '<div class="inv-rs-table-wrap">' +
+                '<table id="inv-rs-list-table" class="data-table inv-rs-list-table" hidden>' +
+                  '<thead><tr>' +
+                    '<th>Code</th><th>Type</th><th>Brand</th><th>Current Stock</th><th>Add Qty</th><th></th>' +
+                  '</tr></thead>' +
+                  '<tbody id="inv-rs-list-tbody"></tbody>' +
+                '</table>' +
+              '</div>' +
             '</div>' +
-            '<div class="form-row">' +
-              '<label for="inv-ro-brand">Brand *</label>' +
-              '<input type="text" id="inv-ro-brand" required>' +
-              '<span class="field-error" id="inv-err-ro-brand"></span>' +
+            '<div class="inv-replenish-footer">' +
+              '<button type="button" id="inv-rs-confirm-all" class="btn btn-primary" disabled>✅ Confirm All</button>' +
             '</div>' +
-            '<div class="form-row">' +
-              '<label for="inv-ro-level">Reorder Level (1-99999) *</label>' +
-              '<input type="number" id="inv-ro-level" min="1" max="99999" step="1" required>' +
-              '<span class="field-error" id="inv-err-ro-level"></span>' +
-            '</div>' +
-            '<div class="form-row">' +
-              '<label for="inv-ro-qty">Reorder Quantity (1-99999) *</label>' +
-              '<input type="number" id="inv-ro-qty" min="1" max="99999" step="1" required>' +
-              '<span class="field-error" id="inv-err-ro-qty"></span>' +
-            '</div>' +
-            '<div class="form-actions">' +
-              '<button type="submit" class="btn btn-primary">Save Config</button>' +
-              '<button type="button" class="btn btn-cancel" id="inv-btn-cancel-reorder">Cancel</button>' +
-            '</div>' +
-          '</form>' +
+          '</div>' +
         '</div>' +
       '</div>';
   }
@@ -730,15 +697,7 @@ var Inventory = (function () {
     var replenishBtn = document.getElementById('inv-btn-replenish');
     if (replenishBtn) {
       replenishBtn.addEventListener('click', function () {
-        _openReplenishModal();
-      });
-    }
-
-    // Reorder Config button
-    var reorderBtn = document.getElementById('inv-btn-reorder-config');
-    if (reorderBtn) {
-      reorderBtn.addEventListener('click', function () {
-        _openReorderModal();
+        _openReplenishScreen();
       });
     }
 
@@ -748,15 +707,9 @@ var Inventory = (function () {
       loadDefaultsBtn.addEventListener('click', _handleLoadDefaults);
     }
 
-    // Cancel buttons
+    // Cancel item modal button
     var cancelItem = document.getElementById('inv-btn-cancel-item');
     if (cancelItem) cancelItem.addEventListener('click', _closeItemModal);
-
-    var cancelReplenish = document.getElementById('inv-btn-cancel-replenish');
-    if (cancelReplenish) cancelReplenish.addEventListener('click', _closeReplenishModal);
-
-    var cancelReorder = document.getElementById('inv-btn-cancel-reorder');
-    if (cancelReorder) cancelReorder.addEventListener('click', _closeReorderModal);
 
     // Item form submit
     var itemForm = document.getElementById('inv-item-form');
@@ -767,22 +720,57 @@ var Inventory = (function () {
       });
     }
 
-    // Replenish form submit
-    var replenishForm = document.getElementById('inv-replenish-form');
-    if (replenishForm) {
-      replenishForm.addEventListener('submit', function (e) {
-        e.preventDefault();
-        _handleReplenishSave();
+    // Replenish screen close button
+    var replenishClose = document.getElementById('inv-replenish-close');
+    if (replenishClose) {
+      replenishClose.addEventListener('click', _closeReplenishScreen);
+    }
+
+    // Replenish screen: search
+    var rsSearch = document.getElementById('inv-rs-search');
+    if (rsSearch) {
+      rsSearch.addEventListener('input', Utils.debounce(function () {
+        _renderReplenishResults(rsSearch.value);
+      }, 250));
+    }
+
+    // Replenish screen: create new item
+    var rsCreateNew = document.getElementById('inv-rs-create-new');
+    if (rsCreateNew) {
+      rsCreateNew.addEventListener('click', function () {
+        _addingForReplenish = true;
+        _openItemModal(null);
       });
     }
 
-    // Reorder form submit
-    var reorderForm = document.getElementById('inv-reorder-form');
-    if (reorderForm) {
-      reorderForm.addEventListener('submit', function (e) {
-        e.preventDefault();
-        _handleReorderSave();
+    // Replenish screen: add to list (delegated on results container)
+    var rsResults = document.getElementById('inv-rs-results');
+    if (rsResults) {
+      rsResults.addEventListener('click', function (e) {
+        var btn = e.target.closest('.inv-rs-add-btn');
+        if (!btn) return;
+        var itemId = btn.getAttribute('data-id');
+        var qtyInput = rsResults.querySelector('.inv-rs-qty-input[data-id="' + itemId + '"]');
+        var qty = qtyInput ? parseInt(qtyInput.value, 10) : 1;
+        if (!qty || qty < 1) qty = 1;
+        _addToReplenishList(itemId, qty);
       });
+    }
+
+    // Replenish screen: remove from list + qty change (delegated on list tbody)
+    var rsListContainer = document.getElementById('inv-rs-list-container');
+    if (rsListContainer) {
+      rsListContainer.addEventListener('click', function (e) {
+        var btn = e.target.closest('.inv-rs-remove-btn');
+        if (!btn) return;
+        _removeFromReplenishList(btn.getAttribute('data-id'));
+      });
+    }
+
+    // Replenish screen: confirm all
+    var rsConfirmAll = document.getElementById('inv-rs-confirm-all');
+    if (rsConfirmAll) {
+      rsConfirmAll.addEventListener('click', _handleConfirmReplenish);
     }
 
     // Search input
@@ -959,6 +947,23 @@ var Inventory = (function () {
    * Opens the add/edit item modal.
    * @private
    */
+  async function _loadVendorDatalist() {
+    var datalist = document.getElementById('inv-vendor-datalist');
+    if (!datalist) return;
+    if (typeof Vendor === 'undefined' || !Vendor.getAllVendors) return;
+    try {
+      var vendors = await Vendor.getAllVendors();
+      var html = '';
+      for (var i = 0; i < vendors.length; i++) {
+        html += '<option value="' + Utils.escapeHtml(vendors[i].vendor_code) + '">' +
+          Utils.escapeHtml(vendors[i].name) + '</option>';
+      }
+      datalist.innerHTML = html;
+    } catch (e) {
+      // silently ignore — input still works as free text
+    }
+  }
+
   async function _openItemModal(itemId) {
     _currentEditId = itemId;
     var modal = document.getElementById('inv-item-modal');
@@ -966,6 +971,7 @@ var Inventory = (function () {
     if (!modal) return;
 
     _clearFormErrors('inv-item-form');
+    _loadVendorDatalist();
 
     if (itemId) {
       title.textContent = 'Edit Item';
@@ -979,6 +985,8 @@ var Inventory = (function () {
         document.getElementById('inv-f-mrp').value = item.mrp || '';
         document.getElementById('inv-f-sales-price').value = item.sales_price || '';
         document.getElementById('inv-f-quantity').value = item.quantity || 0;
+        document.getElementById('inv-f-reorder-level').value = item.reorder_level != null ? item.reorder_level : '';
+        document.getElementById('inv-f-reorder-qty').value = item.reorder_qty != null ? item.reorder_qty : '';
       }
     } else {
       title.textContent = 'Add Item';
@@ -994,32 +1002,191 @@ var Inventory = (function () {
     _currentEditId = null;
   }
 
-  function _openReplenishModal() {
-    var modal = document.getElementById('inv-replenish-modal');
-    if (modal) {
-      _clearFormErrors('inv-replenish-form');
-      document.getElementById('inv-replenish-form').reset();
-      modal.hidden = false;
+  function _openReplenishScreen() {
+    _replenishList = [];
+    var screen = document.getElementById('inv-replenish-screen');
+    if (!screen) return;
+    screen.hidden = false;
+    var searchInput = document.getElementById('inv-rs-search');
+    if (searchInput) searchInput.value = '';
+    _renderReplenishResults('');
+    _renderReplenishList();
+  }
+
+  function _closeReplenishScreen() {
+    var screen = document.getElementById('inv-replenish-screen');
+    if (screen) screen.hidden = true;
+    _replenishList = [];
+  }
+
+  function _renderReplenishResults(searchText) {
+    var container = document.getElementById('inv-rs-results');
+    if (!container) return;
+
+    var search = (searchText || '').toLowerCase().trim();
+    var results;
+    if (search) {
+      results = [];
+      for (var i = 0; i < _allItems.length; i++) {
+        var it = _allItems[i];
+        if ((it.item_code || '').toLowerCase().indexOf(search) !== -1 ||
+            (it.item_type || '').toLowerCase().indexOf(search) !== -1 ||
+            (it.brand || '').toLowerCase().indexOf(search) !== -1 ||
+            (it.vendor_code || '').toLowerCase().indexOf(search) !== -1) {
+          results.push(it);
+          if (results.length >= 20) break;
+        }
+      }
+    } else {
+      results = _allItems.slice(0, 20);
     }
-  }
 
-  function _closeReplenishModal() {
-    var modal = document.getElementById('inv-replenish-modal');
-    if (modal) modal.hidden = true;
-  }
-
-  function _openReorderModal() {
-    var modal = document.getElementById('inv-reorder-modal');
-    if (modal) {
-      _clearFormErrors('inv-reorder-form');
-      document.getElementById('inv-reorder-form').reset();
-      modal.hidden = false;
+    if (results.length === 0) {
+      container.innerHTML = '<p class="inv-rs-no-results">No items found.</p>';
+      return;
     }
+
+    var html = '';
+    for (var j = 0; j < results.length; j++) {
+      var item = results[j];
+      var alreadyAdded = false;
+      for (var n = 0; n < _replenishList.length; n++) {
+        if (_replenishList[n].item.id === item.id) { alreadyAdded = true; break; }
+      }
+      var safeId = Utils.escapeHtml(item.id);
+      html += '<div class="inv-rs-result-row">';
+      html += '<div class="inv-rs-result-info">';
+      html += '<span class="inv-rs-result-code">' + Utils.escapeHtml(item.item_code || '') + '</span>';
+      html += '<span class="inv-rs-result-type">' + Utils.escapeHtml(item.item_type || '') + (item.brand ? ' · ' + Utils.escapeHtml(item.brand) : '') + '</span>';
+      html += '<span class="inv-rs-result-stock">Stock: ' + (item.quantity || 0) + '</span>';
+      html += '</div>';
+      html += '<div class="inv-rs-result-actions">';
+      if (alreadyAdded) {
+        html += '<span class="inv-rs-added-badge">✓ Added</span>';
+      } else {
+        html += '<input type="number" class="inv-rs-qty-input" min="1" max="99999" value="1" data-id="' + safeId + '">';
+        html += '<button type="button" class="btn btn-sm btn-primary inv-rs-add-btn" data-id="' + safeId + '">Add</button>';
+      }
+      html += '</div>';
+      html += '</div>';
+    }
+    container.innerHTML = html;
   }
 
-  function _closeReorderModal() {
-    var modal = document.getElementById('inv-reorder-modal');
-    if (modal) modal.hidden = true;
+  function _addToReplenishList(itemId, qty) {
+    var item = null;
+    for (var i = 0; i < _allItems.length; i++) {
+      if (_allItems[i].id === itemId) { item = _allItems[i]; break; }
+    }
+    if (!item) return;
+
+    for (var j = 0; j < _replenishList.length; j++) {
+      if (_replenishList[j].item.id === itemId) {
+        Utils.showToast('Item already in the list.', 'info');
+        return;
+      }
+    }
+
+    _replenishList.push({ item: item, qty: qty });
+    _renderReplenishList();
+    _renderReplenishResults(
+      (document.getElementById('inv-rs-search') || {}).value || ''
+    );
+  }
+
+  function _removeFromReplenishList(itemId) {
+    var newList = [];
+    for (var i = 0; i < _replenishList.length; i++) {
+      if (_replenishList[i].item.id !== itemId) newList.push(_replenishList[i]);
+    }
+    _replenishList = newList;
+    _renderReplenishList();
+    _renderReplenishResults(
+      (document.getElementById('inv-rs-search') || {}).value || ''
+    );
+  }
+
+  function _renderReplenishList() {
+    var emptyMsg = document.getElementById('inv-rs-empty');
+    var table = document.getElementById('inv-rs-list-table');
+    var tbody = document.getElementById('inv-rs-list-tbody');
+    var confirmBtn = document.getElementById('inv-rs-confirm-all');
+
+    if (!tbody) return;
+
+    if (_replenishList.length === 0) {
+      if (emptyMsg) emptyMsg.hidden = false;
+      if (table) table.hidden = true;
+      if (confirmBtn) confirmBtn.disabled = true;
+      return;
+    }
+
+    if (emptyMsg) emptyMsg.hidden = true;
+    if (table) table.hidden = false;
+    if (confirmBtn) confirmBtn.disabled = false;
+
+    var html = '';
+    for (var i = 0; i < _replenishList.length; i++) {
+      var row = _replenishList[i];
+      var safeId = Utils.escapeHtml(row.item.id);
+      html += '<tr>';
+      html += '<td>' + Utils.escapeHtml(row.item.item_code || '') + '</td>';
+      html += '<td>' + Utils.escapeHtml(row.item.item_type || '') + '</td>';
+      html += '<td>' + Utils.escapeHtml(row.item.brand || '') + '</td>';
+      html += '<td>' + (row.item.quantity || 0) + '</td>';
+      html += '<td><input type="number" class="inv-rs-list-qty" min="1" max="99999" value="' + row.qty + '" data-id="' + safeId + '"></td>';
+      html += '<td><button type="button" class="btn btn-sm btn-danger inv-rs-remove-btn" data-id="' + safeId + '">Remove</button></td>';
+      html += '</tr>';
+    }
+    tbody.innerHTML = html;
+  }
+
+  async function _handleConfirmReplenish() {
+    if (_replenishList.length === 0) return;
+
+    var items = [];
+    for (var i = 0; i < _replenishList.length; i++) {
+      var qtyInput = document.querySelector('.inv-rs-list-qty[data-id="' + _replenishList[i].item.id + '"]');
+      var qty = qtyInput ? parseInt(qtyInput.value, 10) : _replenishList[i].qty;
+      if (!qty || qty < 1 || qty > 99999) {
+        Utils.showToast('Invalid quantity for ' + (_replenishList[i].item.item_code || 'item') + '.', 'error');
+        return;
+      }
+      items.push({ item: _replenishList[i].item, qty: qty });
+    }
+
+    var confirmBtn = document.getElementById('inv-rs-confirm-all');
+    if (confirmBtn) confirmBtn.disabled = true;
+
+    var successCount = 0;
+    var failCount = 0;
+
+    for (var j = 0; j < items.length; j++) {
+      try {
+        await DataLayer.incrementField(COLLECTION_ITEMS, items[j].item.id, 'quantity', items[j].qty);
+        await DataLayer.addDocument(COLLECTION_REPLENISHMENT, {
+          item_code: items[j].item.item_code || '',
+          item_type: items[j].item.item_type || '',
+          brand: items[j].item.brand || '',
+          batch_code: items[j].item.batch_code || '',
+          vendor_code: items[j].item.vendor_code || '',
+          quantity: items[j].qty,
+          date: new Date().toISOString()
+        });
+        successCount++;
+      } catch (e) {
+        failCount++;
+      }
+    }
+
+    if (failCount === 0) {
+      Utils.showToast('Stock replenished for ' + successCount + ' item(s).', 'success');
+    } else {
+      Utils.showToast(successCount + ' updated, ' + failCount + ' failed.', 'warning');
+    }
+
+    _closeReplenishScreen();
+    _loadItemList();
   }
 
   /**
@@ -1091,9 +1258,12 @@ var Inventory = (function () {
       cost_price: document.getElementById('inv-f-cost-price').value,
       mrp: document.getElementById('inv-f-mrp').value,
       sales_price: document.getElementById('inv-f-sales-price').value,
-      quantity: document.getElementById('inv-f-quantity').value
+      quantity: document.getElementById('inv-f-quantity').value,
+      reorder_level: document.getElementById('inv-f-reorder-level').value,
+      reorder_qty: document.getElementById('inv-f-reorder-qty').value
     };
 
+    var isNew = !_currentEditId;
     var result;
     if (_currentEditId) {
       result = await updateItem(_currentEditId, itemData);
@@ -1104,95 +1274,24 @@ var Inventory = (function () {
     if (result.success) {
       Utils.showToast(_currentEditId ? 'Item updated successfully.' : 'Item added successfully.', 'success');
       _closeItemModal();
-      _loadItemList();
+      if (isNew && _addingForReplenish && result.id) {
+        _addingForReplenish = false;
+        await _loadItemList();
+        var newId = result.id;
+        var newItem = null;
+        for (var k = 0; k < _allItems.length; k++) {
+          if (_allItems[k].id === newId) { newItem = _allItems[k]; break; }
+        }
+        if (newItem) _addToReplenishList(newItem.id, 1);
+      } else {
+        _addingForReplenish = false;
+        _loadItemList();
+      }
     } else {
       _showItemFormErrors(result.errors || ['An unknown error occurred.']);
     }
   }
 
-  /**
-   * Handles replenishment form submission.
-   * @private
-   */
-  async function _handleReplenishSave() {
-    _clearFormErrors('inv-replenish-form');
-
-    var replenishData = {
-      item_code: document.getElementById('inv-r-item-code').value,
-      batch_code: document.getElementById('inv-r-batch-code').value,
-      vendor_code: document.getElementById('inv-r-vendor-code').value,
-      quantity: document.getElementById('inv-r-quantity').value
-    };
-
-    var result = await replenishStock(replenishData);
-
-    if (result.success) {
-      Utils.showToast('Stock replenished successfully.', 'success');
-      _closeReplenishModal();
-      _loadItemList();
-    } else {
-      // Show errors inline
-      var errors = result.errors || [];
-      for (var i = 0; i < errors.length; i++) {
-        var msg = errors[i].toLowerCase();
-        if (msg.indexOf('item code') !== -1 || msg.indexOf('item not found') !== -1) {
-          var el = document.getElementById('inv-err-r-item-code');
-          if (el) el.textContent = errors[i];
-        } else if (msg.indexOf('batch') !== -1) {
-          var el2 = document.getElementById('inv-err-r-batch-code');
-          if (el2) el2.textContent = errors[i];
-        } else if (msg.indexOf('vendor') !== -1) {
-          var el3 = document.getElementById('inv-err-r-vendor-code');
-          if (el3) el3.textContent = errors[i];
-        } else if (msg.indexOf('quantity') !== -1) {
-          var el4 = document.getElementById('inv-err-r-quantity');
-          if (el4) el4.textContent = errors[i];
-        }
-      }
-      Utils.showToast(errors[0] || 'Replenishment failed.', 'error');
-    }
-  }
-
-  /**
-   * Handles reorder configuration form submission.
-   * @private
-   */
-  async function _handleReorderSave() {
-    _clearFormErrors('inv-reorder-form');
-
-    var category = document.getElementById('inv-ro-category').value;
-    var brand = document.getElementById('inv-ro-brand').value;
-    var config = {
-      reorder_level: document.getElementById('inv-ro-level').value,
-      reorder_qty: document.getElementById('inv-ro-qty').value
-    };
-
-    var result = await setReorderConfig(category, brand, config);
-
-    if (result.success) {
-      Utils.showToast('Reorder configuration saved.', 'success');
-      _closeReorderModal();
-    } else {
-      var errors = result.errors || [];
-      for (var i = 0; i < errors.length; i++) {
-        var msg = errors[i].toLowerCase();
-        if (msg.indexOf('category') !== -1) {
-          var el = document.getElementById('inv-err-ro-category');
-          if (el) el.textContent = errors[i];
-        } else if (msg.indexOf('brand') !== -1) {
-          var el2 = document.getElementById('inv-err-ro-brand');
-          if (el2) el2.textContent = errors[i];
-        } else if (msg.indexOf('level') !== -1) {
-          var el3 = document.getElementById('inv-err-ro-level');
-          if (el3) el3.textContent = errors[i];
-        } else if (msg.indexOf('quantity') !== -1) {
-          var el4 = document.getElementById('inv-err-ro-qty');
-          if (el4) el4.textContent = errors[i];
-        }
-      }
-      Utils.showToast(errors[0] || 'Failed to save reorder config.', 'error');
-    }
-  }
 
   /**
    * Updates the bulk action bar visibility and count.
