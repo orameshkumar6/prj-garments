@@ -16,10 +16,14 @@
     <title>Prj-Garments</title>
 </head>
 <body>
-    <!-- Offline Indicator Banner -->
-    <div id="offline-banner" class="offline-banner" hidden>
-        <span class="offline-icon">⚡</span>
-        <span class="offline-text">You are offline. Changes will sync when connection is restored.</span>
+    <!-- Sync Status Banner -->
+    <div id="sync-banner" class="sync-banner sync-banner--online">
+        <span class="sync-banner-left">
+            <span id="sync-status-icon" class="sync-status-icon"></span>
+            <span id="sync-status-text" class="sync-status-text">Online</span>
+            <span id="sync-last-time" class="sync-last-time"></span>
+        </span>
+        <button id="sync-now-btn" class="btn-sync" type="button">Sync Now</button>
     </div>
 
     <!-- Firebase Init Error Screen -->

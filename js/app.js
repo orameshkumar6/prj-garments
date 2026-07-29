@@ -132,29 +132,90 @@ function setupSidebarToggle() {
 }
 
 /**
- * Set up offline/online indicator using DataLayer.onConnectionChange.
+ * Set up the sync status banner with online/offline state and a Sync Now button.
+ * Sync phases: (1) waitForPendingWrites — push local writes to Firebase,
+ *              (2) disableNetwork + enableNetwork — pull fresh data from Firebase.
  */
 function setupConnectionIndicator() {
-  var offlineBanner = document.getElementById('offline-banner');
-  if (!offlineBanner) return;
+  var banner     = document.getElementById('sync-banner');
+  var iconEl     = document.getElementById('sync-status-icon');
+  var textEl     = document.getElementById('sync-status-text');
+  var lastTimeEl = document.getElementById('sync-last-time');
+  var syncBtn    = document.getElementById('sync-now-btn');
+  if (!banner) return;
 
-  function updateIndicator(isOnline) {
+  var _lastSyncTime = null;
+  var _syncing = false;
+
+  function _formatLastSync() {
+    if (!_lastSyncTime || !lastTimeEl) return;
+    var diff = Math.round((Date.now() - _lastSyncTime) / 1000);
+    if (diff < 10)        lastTimeEl.textContent = '· just now';
+    else if (diff < 60)   lastTimeEl.textContent = '· ' + diff + 's ago';
+    else if (diff < 3600) lastTimeEl.textContent = '· ' + Math.round(diff / 60) + 'm ago';
+    else                  lastTimeEl.textContent = '· ' + Math.round(diff / 3600) + 'h ago';
+  }
+
+  function _updateBanner(isOnline) {
+    if (_syncing) return;
     if (isOnline) {
-      offlineBanner.setAttribute('hidden', '');
+      banner.className = 'sync-banner sync-banner--online';
+      iconEl.textContent = '●';
+      iconEl.classList.remove('spinning');
+      textEl.textContent = 'Online';
+      if (syncBtn) { syncBtn.removeAttribute('hidden'); syncBtn.disabled = false; }
     } else {
-      offlineBanner.removeAttribute('hidden');
+      banner.className = 'sync-banner sync-banner--offline';
+      iconEl.textContent = '⚡';
+      iconEl.classList.remove('spinning');
+      textEl.textContent = 'Offline — changes will sync when connected';
+      if (lastTimeEl) lastTimeEl.textContent = '';
+      if (syncBtn) syncBtn.setAttribute('hidden', '');
+    }
+    _formatLastSync();
+  }
+
+  async function _handleSync() {
+    if (typeof DataLayer === 'undefined' || !DataLayer.isOnline()) {
+      if (typeof Utils !== 'undefined') Utils.showToast('Cannot sync while offline.', 'error');
+      return;
+    }
+    _syncing = true;
+    banner.className = 'sync-banner sync-banner--syncing';
+    iconEl.textContent = '↻';
+    iconEl.classList.add('spinning');
+    textEl.textContent = 'Syncing…';
+    if (lastTimeEl) lastTimeEl.textContent = '';
+    if (syncBtn) syncBtn.disabled = true;
+
+    try {
+      await DataLayer.sync();
+      _lastSyncTime = Date.now();
+      _syncing = false;
+      _updateBanner(true);
+      if (typeof Utils !== 'undefined') Utils.showToast('Data synced successfully!', 'success');
+    } catch (e) {
+      _syncing = false;
+      banner.className = 'sync-banner sync-banner--error';
+      iconEl.textContent = '⚠';
+      iconEl.classList.remove('spinning');
+      textEl.textContent = 'Sync failed — tap to retry';
+      if (syncBtn) { syncBtn.removeAttribute('hidden'); syncBtn.disabled = false; }
+      if (typeof Utils !== 'undefined') Utils.showToast('Sync failed. Please try again.', 'error');
     }
   }
 
-  // Use DataLayer's onConnectionChange if available
+  if (syncBtn) syncBtn.addEventListener('click', _handleSync);
+
+  // Refresh "X min ago" label every minute
+  setInterval(_formatLastSync, 60000);
+
   if (typeof DataLayer !== 'undefined' && DataLayer.onConnectionChange) {
-    DataLayer.onConnectionChange(updateIndicator);
-  } else {
-    // Fallback: use navigator.onLine and online/offline events
-    updateIndicator(navigator.onLine);
-    window.addEventListener('online', function() { updateIndicator(true); });
-    window.addEventListener('offline', function() { updateIndicator(false); });
+    DataLayer.onConnectionChange(_updateBanner);
   }
+
+  // Initialise banner state
+  _updateBanner(navigator.onLine);
 }
 
 /**

@@ -86,31 +86,99 @@ body {
   overflow: hidden;
 }
 
-/* --- Offline Banner --- */
-.offline-banner {
+/* --- Sync Status Banner --- */
+.sync-banner {
   position: fixed;
   top: 0;
   left: 0;
   right: 0;
   z-index: 9999;
-  background-color: var(--color-warning);
-  color: #212121;
-  padding: 8px 16px;
+  padding: 5px 14px;
   display: flex;
   align-items: center;
+  justify-content: space-between;
   gap: 8px;
-  font-size: 0.875rem;
+  font-size: 0.78rem;
   font-weight: 500;
-  text-align: center;
-  justify-content: center;
+  transition: background 0.3s, color 0.3s;
+  min-height: 30px;
 }
 
-.offline-banner[hidden] {
-  display: none;
+.sync-banner--online {
+  background: #e8f5e9;
+  color: #2e7d32;
 }
 
-.offline-icon {
-  font-size: 1rem;
+.sync-banner--offline {
+  background: var(--color-warning);
+  color: #212121;
+}
+
+.sync-banner--syncing {
+  background: #e3f2fd;
+  color: #1565c0;
+}
+
+.sync-banner--error {
+  background: #fce4ec;
+  color: #c62828;
+}
+
+.sync-banner-left {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+}
+
+.sync-status-icon {
+  font-size: 0.65rem;
+  flex-shrink: 0;
+}
+
+.sync-status-icon.spinning {
+  display: inline-block;
+  animation: sync-spin 1s linear infinite;
+}
+
+@keyframes sync-spin {
+  to { transform: rotate(360deg); }
+}
+
+.sync-status-text {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.sync-last-time {
+  opacity: 0.7;
+  white-space: nowrap;
+}
+
+.btn-sync {
+  background: transparent;
+  border: 1.5px solid currentColor;
+  color: inherit;
+  border-radius: 4px;
+  padding: 2px 10px;
+  font-size: 0.74rem;
+  font-weight: 600;
+  cursor: pointer;
+  white-space: nowrap;
+  flex-shrink: 0;
+  line-height: 1.4;
+}
+
+.btn-sync:hover:not(:disabled) {
+  background: rgba(0, 0, 0, 0.08);
+}
+
+.btn-sync:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
 }
 
 /* --- Firebase Error Screen --- */
@@ -151,6 +219,7 @@ body {
   display: flex;
   flex-direction: row;
   min-height: 100vh;
+  padding-top: 30px; /* height of .sync-banner */
   min-height: 100dvh;
 }
 
@@ -1343,7 +1412,7 @@ select option {
   .sidebar-backdrop,
   .top-bar,
   .hamburger-btn,
-  .offline-banner,
+  .sync-banner,
   .toast-container,
   .confirm-dialog-overlay,
   .modal-overlay,

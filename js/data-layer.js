@@ -298,6 +298,25 @@ var DataLayer = (function () {
     await docRef.update(updateData);
   }
 
+  // ─── Sync ───────────────────────────────────────────────────────────────────
+
+  /**
+   * Performs a two-phase sync:
+   * 1. Waits for all pending local writes to be committed to Firebase.
+   * 2. Cycles the Firestore network connection to pull fresh data from Firebase.
+   * @returns {Promise<void>}
+   */
+  async function sync() {
+    if (!_db) throw new Error('DataLayer: Not initialized.');
+
+    // Phase 1: flush all buffered writes to Firebase
+    await _db.waitForPendingWrites();
+
+    // Phase 2: force fresh pull — disconnect then reconnect
+    await _db.disableNetwork();
+    await _db.enableNetwork();
+  }
+
   // ─── Connectivity Management ────────────────────────────────────────────────
 
   /**
@@ -331,7 +350,8 @@ var DataLayer = (function () {
     executeBatch: executeBatch,
     incrementField: incrementField,
     onConnectionChange: onConnectionChange,
-    isOnline: isOnline
+    isOnline: isOnline,
+    sync: sync
   };
 
 })();
