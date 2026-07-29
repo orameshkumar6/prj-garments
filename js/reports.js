@@ -1,5 +1,5 @@
 /**
- * Cloth Shop Firebase - Reports Module
+ * Prj-Garments Firebase - Reports Module
  * Sales reports, stock verification, end-of-sale reports, re-order reports, RFQ/PO generation.
  */
 var Reports = (function () {

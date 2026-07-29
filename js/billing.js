@@ -1,5 +1,5 @@
 /**
- * Cloth Shop Firebase - Billing Module
+ * Prj-Garments Firebase - Billing Module
  * Bill creation, GST calculation, savings calculation, bill formatting, print orchestration.
  * Uses Settings for config values, Utils for formatting/toasts/escaping, Printer for print output.
  */

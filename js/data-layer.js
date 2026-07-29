@@ -1,5 +1,5 @@
 /**
- * Cloth Shop Firebase - Data Layer Module
+ * Prj-Garments Firebase - Data Layer Module
  * Abstraction over Firestore operations. All modules interact with Firestore through this layer.
  * Provides generic CRUD, batch operations, atomic increments, and connectivity state management.
  */

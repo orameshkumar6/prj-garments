@@ -1,5 +1,5 @@
 /**
- * Cloth Shop Firebase - Employee Master Module
+ * Prj-Garments Firebase - Employee Master Module
  * Employee CRUD, validation, auto-generated employee codes, and UI.
  */
 var Employee = (function () {

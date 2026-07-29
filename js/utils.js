@@ -1,5 +1,5 @@
 /**
- * Cloth Shop Firebase - Utility Module
+ * Prj-Garments Firebase - Utility Module
  * Shared helpers: ID generation, date formatting, currency, rounding, UI notifications, debounce, HTML escaping.
  */
 var Utils = (function () {

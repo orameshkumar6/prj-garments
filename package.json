@@ -1,8 +1,8 @@
 {
-  "name": "cloth-shop-firebase",
+  "name": "prj-garments",
   "version": "1.0.0",
   "private": true,
-  "description": "Cloth Shop Firebase - Retail clothing store management PWA",
+  "description": "Prj-Garments Firebase - Retail clothing store management PWA",
   "scripts": {
     "test": "vitest run",
     "test:watch": "vitest"

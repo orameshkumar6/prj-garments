@@ -1,5 +1,5 @@
 /**
- * Cloth Shop Firebase - Attendance & Salary Report Module
+ * Prj-Garments Firebase - Attendance & Salary Report Module
  * Mark attendance, view attendance, generate salary reports.
  */
 var Attendance = (function () {

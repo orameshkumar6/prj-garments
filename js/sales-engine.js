@@ -1,5 +1,5 @@
 /**
- * Cloth Shop Firebase - Sales Engine Module
+ * Prj-Garments Firebase - Sales Engine Module
  * Atomic sale processing — stock validation, stock reduction + transaction recording
  * in a single Firestore batch write for all-or-nothing consistency.
  * Uses DataLayer for all Firestore operations.

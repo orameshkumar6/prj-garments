@@ -1,6 +1,6 @@
 {
-  "name": "Cloth Shop",
-  "short_name": "Cloth Shop",
+  "name": "Prj-Garments",
+  "short_name": "Prj-Garments",
   "description": "Firebase-powered retail clothing store management - inventory, billing, sales tracking, and more",
   "start_url": "./index.html",
   "scope": ".",

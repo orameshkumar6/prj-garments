@@ -1,5 +1,5 @@
 /**
- * Cloth Shop Firebase - Material Request Module
+ * Prj-Garments Firebase - Material Request Module
  * Material request creation, approval workflow, return processing, and UI rendering.
  * Uses DataLayer for all Firestore operations and Utils for shared helpers.
  *

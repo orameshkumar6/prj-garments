@@ -1,5 +1,5 @@
 /**
- * Cloth Shop Firebase - Settings/Config Module
+ * Prj-Garments Firebase - Settings/Config Module
  * Manages GST rate configuration, store details, bill footer, and renders the Settings screen UI.
  * Persists configuration to Firestore "config" collection (doc ID: "app_config").
  */

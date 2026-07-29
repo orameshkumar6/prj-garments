@@ -1,5 +1,5 @@
 /**
- * Cloth Shop Firebase - Theme Engine Module
+ * Prj-Garments Firebase - Theme Engine Module
  * Manages color theme switching, persistence via localStorage,
  * OS preference detection, and auto-switching on system changes.
  *
@@ -13,7 +13,7 @@ var ThemeEngine = (function () {
 
   // ─── Constants ──────────────────────────────────────────────────────────────
 
-  var STORAGE_KEY = 'cloth-shop-theme';
+  var STORAGE_KEY = 'prj-garments-theme';
   var DEFAULT_THEME_ID = 'light';
 
   /**

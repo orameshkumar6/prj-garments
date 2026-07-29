@@ -1,5 +1,5 @@
 /**
- * Cloth Shop Firebase - Inventory Module
+ * Prj-Garments Firebase - Inventory Module
  * Item CRUD, stock replenishment, item code generation, re-order level configuration,
  * duplicate validation, and inventory UI rendering.
  */

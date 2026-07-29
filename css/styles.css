@@ -1,5 +1,5 @@
 /* ============================================
-   Cloth Shop Firebase PWA - Styles
+   Prj-Garments Firebase PWA - Styles
    Responsive, theme-aware, offline-friendly
    ============================================ */
 
@@ -1683,4 +1683,1160 @@ select option {
 
 .bulk-action-bar .btn:hover {
   background-color: rgba(255,255,255,0.3);
+}
+
+
+/* ============================================================
+   RICH UI — Extended Design Tokens
+   ============================================================ */
+
+:root {
+  --color-primary-alpha-8:  rgba(98, 0, 234, 0.08);
+  --color-primary-alpha-12: rgba(98, 0, 234, 0.12);
+  --color-primary-alpha-24: rgba(98, 0, 234, 0.24);
+
+  --sidebar-header-bg:      linear-gradient(150deg, #5c00d6 0%, #8325c3 100%);
+  --sidebar-header-fg:      #ffffff;
+  --sidebar-header-fg-dim:  rgba(255, 255, 255, 0.68);
+
+  --shadow-xs:      0 1px 3px rgba(0,0,0,0.06);
+  --shadow-card:    0 2px 8px rgba(0,0,0,0.08), 0 0 1px rgba(0,0,0,0.05);
+  --shadow-raised:  0 4px 16px rgba(0,0,0,0.10), 0 1px 4px rgba(0,0,0,0.06);
+  --shadow-dialog:  0 12px 40px rgba(0,0,0,0.18), 0 2px 8px rgba(0,0,0,0.10);
+
+  --radius-lg: 12px;
+  --radius-xl: 16px;
+  --radius-full: 9999px;
+
+  --badge-success-bg: #e8f5e9; --badge-success-fg: #1b5e20;
+  --badge-warning-bg: #fff8e1; --badge-warning-fg: #e65100;
+  --badge-danger-bg:  #ffebee; --badge-danger-fg:  #b71c1c;
+  --badge-neutral-bg: #f5f5f5; --badge-neutral-fg: #424242;
+
+  --input-focus-ring: 0 0 0 3px rgba(98, 0, 234, 0.12);
+}
+
+[data-theme="dark"] {
+  --color-primary-alpha-8:  rgba(187, 134, 252, 0.10);
+  --color-primary-alpha-12: rgba(187, 134, 252, 0.15);
+  --color-primary-alpha-24: rgba(187, 134, 252, 0.26);
+
+  --sidebar-header-bg:      linear-gradient(150deg, #0e001f 0%, #1a0050 100%);
+  --sidebar-header-fg:      #e8d5ff;
+  --sidebar-header-fg-dim:  rgba(232, 213, 255, 0.58);
+
+  --shadow-xs:      0 1px 3px rgba(0,0,0,0.30);
+  --shadow-card:    0 2px 8px rgba(0,0,0,0.35), 0 0 1px rgba(0,0,0,0.25);
+  --shadow-raised:  0 4px 16px rgba(0,0,0,0.46), 0 1px 4px rgba(0,0,0,0.30);
+  --shadow-dialog:  0 12px 40px rgba(0,0,0,0.62), 0 2px 8px rgba(0,0,0,0.40);
+
+  --badge-success-bg: rgba(102,187,106,0.13); --badge-success-fg: #81c784;
+  --badge-warning-bg: rgba(255,167, 38,0.13); --badge-warning-fg: #ffb74d;
+  --badge-danger-bg:  rgba(239, 83, 80,0.13); --badge-danger-fg:  #ef9a9a;
+  --badge-neutral-bg: rgba(255,255,255,0.07); --badge-neutral-fg: #b0b0b0;
+
+  --input-focus-ring: 0 0 0 3px rgba(187, 134, 252, 0.18);
+}
+
+[data-theme="blue"] {
+  --color-primary-alpha-8:  rgba(21, 101, 192, 0.08);
+  --color-primary-alpha-12: rgba(21, 101, 192, 0.12);
+  --color-primary-alpha-24: rgba(21, 101, 192, 0.24);
+
+  --sidebar-header-bg:      linear-gradient(150deg, #0a3d91 0%, #1565c0 100%);
+  --sidebar-header-fg:      #ffffff;
+  --sidebar-header-fg-dim:  rgba(255, 255, 255, 0.70);
+
+  --shadow-xs:      0 1px 3px rgba(13,71,161,0.07);
+  --shadow-card:    0 2px 8px rgba(13,71,161,0.09), 0 0 1px rgba(13,71,161,0.06);
+  --shadow-raised:  0 4px 16px rgba(13,71,161,0.13);
+  --shadow-dialog:  0 12px 40px rgba(13,71,161,0.15), 0 2px 8px rgba(0,0,0,0.08);
+
+  --badge-success-bg: #e8f5e9; --badge-success-fg: #1b5e20;
+  --badge-warning-bg: #fff8e1; --badge-warning-fg: #e65100;
+  --badge-danger-bg:  #ffebee; --badge-danger-fg:  #b71c1c;
+  --badge-neutral-bg: #e3f2fd; --badge-neutral-fg: #1565c0;
+
+  --input-focus-ring: 0 0 0 3px rgba(21, 101, 192, 0.14);
+}
+
+
+/* ============================================================
+   RICH UI — Sidebar
+   ============================================================ */
+
+.sidebar {
+  border-right: none;
+  box-shadow: 2px 0 20px rgba(0,0,0,0.10);
+}
+
+.sidebar-header {
+  background: var(--sidebar-header-bg);
+  border-bottom: none;
+  padding: 18px 20px 16px;
+  flex-shrink: 0;
+}
+
+.sidebar-header .app-title {
+  color: var(--sidebar-header-fg) !important;
+  font-size: 1.0625rem;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  text-shadow: 0 1px 4px rgba(0,0,0,0.25);
+}
+
+.sidebar-header .sidebar-close-btn {
+  color: var(--sidebar-header-fg-dim) !important;
+  border-radius: 8px;
+}
+.sidebar-header .sidebar-close-btn:hover {
+  background: rgba(255,255,255,0.18) !important;
+  color: var(--sidebar-header-fg) !important;
+}
+
+.nav-list {
+  padding: 10px 8px;
+}
+
+.nav-item {
+  border-radius: 8px;
+  padding: 10px 14px;
+  gap: 10px;
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: var(--color-text);
+  margin: 1px 0;
+  transition: background-color 0.15s ease, color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.nav-item:hover {
+  background: var(--color-primary-alpha-8);
+  color: var(--color-primary);
+}
+
+.nav-item.active {
+  background: var(--color-primary);
+  color: #ffffff;
+  font-weight: 600;
+  box-shadow: 0 3px 10px var(--color-primary-alpha-24);
+}
+
+.nav-icon {
+  font-size: 1rem;
+}
+
+
+/* ============================================================
+   RICH UI — Page / Section Titles
+   ============================================================ */
+
+/* h2.screen-title rendered inside screen content by modules */
+.screen-content .screen-title,
+.content-area > .screen-title,
+section.screen .screen-title {
+  font-size: 1.375rem;
+  font-weight: 800;
+  color: var(--color-text);
+  margin-bottom: 20px;
+  padding-bottom: 12px;
+  border-bottom: 2px solid var(--color-border);
+  letter-spacing: -0.025em;
+  line-height: 1.2;
+}
+
+/* Section headings used by billing, expense, etc. */
+.section-heading {
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--color-text);
+  margin-bottom: 14px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.section-heading::before {
+  content: '';
+  display: block;
+  width: 3px;
+  height: 1.1em;
+  background: var(--color-primary);
+  border-radius: 2px;
+  flex-shrink: 0;
+}
+
+.form-title {
+  font-size: 0.9375rem;
+  font-weight: 700;
+  color: var(--color-text);
+  margin-bottom: 14px;
+}
+
+
+/* ============================================================
+   RICH UI — Modal Dialogs
+   ============================================================ */
+
+.modal-dialog {
+  background: var(--color-surface);
+  border-radius: var(--radius-lg);
+  padding: 24px 28px;
+  max-width: 520px;
+  width: 100%;
+  max-height: 88vh;
+  overflow-y: auto;
+  box-shadow: var(--shadow-dialog);
+  border: 1px solid var(--color-border);
+}
+
+.modal-dialog h3 {
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: var(--color-text);
+  margin-bottom: 20px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid var(--color-border);
+}
+
+/* Label + input stacked rows inside modal-dialog */
+.modal-dialog .form-row {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  margin-bottom: 14px;
+}
+
+.modal-dialog .form-row label {
+  font-size: 0.6875rem;
+  font-weight: 700;
+  color: var(--color-text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.07em;
+}
+
+.modal-dialog .form-row input,
+.modal-dialog .form-row select,
+.modal-dialog .form-row textarea {
+  width: 100%;
+  padding: 8px 12px;
+  font-size: 0.9375rem;
+  font-family: inherit;
+  color: var(--color-text);
+  background: var(--color-surface);
+  border: 1.5px solid var(--color-border);
+  border-radius: 8px;
+  min-height: 38px;
+  outline: none;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.modal-dialog .form-row input:focus,
+.modal-dialog .form-row select:focus,
+.modal-dialog .form-row textarea:focus {
+  border-color: var(--color-primary);
+  box-shadow: var(--input-focus-ring);
+}
+
+.form-actions {
+  display: flex;
+  gap: 10px;
+  justify-content: flex-end;
+  padding-top: 16px;
+  margin-top: 8px;
+  border-top: 1px solid var(--color-border);
+}
+
+/* .btn-cancel used by inventory, replenish, reorder modals */
+.btn-cancel {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 8px 16px;
+  min-height: 36px;
+  font-size: 0.875rem;
+  font-weight: 500;
+  font-family: inherit;
+  cursor: pointer;
+  border-radius: 8px;
+  background: transparent;
+  color: var(--color-text-secondary);
+  border: 1.5px solid var(--color-border);
+  transition: background-color 0.15s ease, color 0.15s ease, border-color 0.15s ease;
+}
+.btn-cancel:hover {
+  background: var(--color-bg);
+  color: var(--color-text);
+  border-color: var(--color-text-secondary);
+}
+
+/* Validation error text */
+.field-error {
+  display: block;
+  font-size: 0.75rem;
+  font-weight: 500;
+  color: var(--color-error);
+  min-height: 1em;
+}
+
+
+/* ============================================================
+   RICH UI — Toolbar
+   ============================================================ */
+
+.toolbar,
+.inv-toolbar {
+  background: var(--color-surface);
+  border-radius: 10px;
+  border: 1px solid var(--color-border);
+  padding: 12px 16px;
+  margin-bottom: 16px;
+  box-shadow: var(--shadow-xs);
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+}
+
+.inv-search-input,
+.inv-filter-select {
+  flex: 1 1 200px;
+  min-width: 120px;
+  padding: 8px 12px;
+  font-size: 0.875rem;
+  font-family: inherit;
+  color: var(--color-text);
+  background: var(--color-surface);
+  border: 1.5px solid var(--color-border);
+  border-radius: 8px;
+  height: 36px;
+  outline: none;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+.inv-search-input:focus,
+.inv-filter-select:focus {
+  border-color: var(--color-primary);
+  box-shadow: var(--input-focus-ring);
+}
+
+
+/* ============================================================
+   RICH UI — Cards & Section Panels
+   ============================================================ */
+
+.section-card,
+.ie-section,
+.settings-section {
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  padding: 20px 24px;
+  margin-bottom: 20px;
+  box-shadow: var(--shadow-card);
+  transition: box-shadow 0.2s ease;
+}
+
+.section-card:hover,
+.ie-section:hover {
+  box-shadow: var(--shadow-raised);
+}
+
+.section-card h2,
+.section-card h3 {
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--color-text);
+  margin-bottom: 14px;
+}
+
+/* Billing section wrappers */
+.billing-section {
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  padding: 16px 20px;
+  margin-bottom: 16px;
+  box-shadow: var(--shadow-card);
+}
+
+.billing-barcode-section {
+  background: linear-gradient(135deg,
+    var(--color-primary-alpha-8) 0%,
+    var(--color-surface) 100%);
+  border: 1.5px solid var(--color-primary-alpha-24);
+}
+
+.billing-barcode-section .form-input {
+  font-size: 1rem;
+  font-weight: 500;
+}
+
+/* Expense form container */
+.exp-form-container {
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  padding: 20px 24px;
+  margin-bottom: 20px;
+  box-shadow: var(--shadow-card);
+}
+
+
+/* ============================================================
+   RICH UI — Form Grid (expense / settings label+input stacks)
+   ============================================================ */
+
+.form-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 14px;
+  margin-bottom: 16px;
+}
+
+.form-grid .form-row {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  margin-bottom: 0;
+}
+
+.form-grid .form-row label {
+  font-size: 0.6875rem;
+  font-weight: 700;
+  color: var(--color-text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.07em;
+}
+
+.form-grid .form-row input,
+.form-grid .form-row select,
+.form-grid .form-row textarea {
+  width: 100%;
+  padding: 8px 12px;
+  font-size: 0.9375rem;
+  font-family: inherit;
+  color: var(--color-text);
+  background: var(--color-surface);
+  border: 1.5px solid var(--color-border);
+  border-radius: 8px;
+  min-height: 38px;
+  outline: none;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.form-grid .form-row input:focus,
+.form-grid .form-row select:focus,
+.form-grid .form-row textarea:focus {
+  border-color: var(--color-primary);
+  box-shadow: var(--input-focus-ring);
+}
+
+
+/* ============================================================
+   RICH UI — Tables
+   ============================================================ */
+
+.table-wrapper {
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+  box-shadow: var(--shadow-card);
+  border: 1px solid var(--color-border);
+}
+
+.data-table th {
+  background: var(--color-bg);
+  color: var(--color-text-secondary);
+  font-size: 0.6875rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.07em;
+  padding: 11px 14px;
+  white-space: nowrap;
+}
+
+.data-table td {
+  padding: 11px 14px;
+  font-size: 0.875rem;
+  color: var(--color-text);
+  vertical-align: middle;
+}
+
+.data-table tbody tr {
+  transition: background-color 0.12s ease;
+}
+
+.data-table tbody tr:hover td {
+  background: var(--color-primary-alpha-8);
+}
+
+.data-table tbody tr:nth-child(even) td {
+  background: rgba(0, 0, 0, 0.025);
+}
+
+[data-theme="dark"] .data-table tbody tr:nth-child(even) td {
+  background: rgba(255, 255, 255, 0.04);
+}
+
+[data-theme="blue"] .data-table tbody tr:nth-child(even) td {
+  background: rgba(21, 101, 192, 0.04);
+}
+
+/* Hover always wins over nth-child */
+.data-table tbody tr:hover td,
+[data-theme="dark"] .data-table tbody tr:hover td,
+[data-theme="blue"] .data-table tbody tr:hover td {
+  background: var(--color-primary-alpha-8);
+}
+
+
+/* ============================================================
+   RICH UI — Buttons (enhanced)
+   ============================================================ */
+
+/* Base .btn class used by JS (e.g., class="btn btn-primary") */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 8px 16px;
+  min-height: 36px;
+  font-size: 0.875rem;
+  font-weight: 500;
+  font-family: inherit;
+  cursor: pointer;
+  border-radius: 8px;
+  border: none;
+  text-decoration: none;
+  white-space: nowrap;
+  transition: background-color 0.15s ease, box-shadow 0.15s ease, transform 0.1s ease, filter 0.15s ease;
+}
+
+.btn.btn-primary,
+.btn-primary {
+  background: var(--color-primary);
+  color: #ffffff;
+  border: none;
+  font-weight: 600;
+  box-shadow: 0 2px 6px var(--color-primary-alpha-24);
+}
+
+.btn.btn-primary:hover,
+.btn-primary:hover {
+  background: var(--color-primary-dark);
+  box-shadow: 0 4px 14px var(--color-primary-alpha-24);
+  transform: translateY(-1px);
+}
+
+.btn.btn-primary:active,
+.btn-primary:active {
+  transform: translateY(0) scale(0.98);
+  box-shadow: 0 1px 4px var(--color-primary-alpha-24);
+}
+
+.btn.btn-secondary,
+.btn-secondary {
+  background: transparent;
+  color: var(--color-primary);
+  border: 1.5px solid var(--color-border);
+  font-weight: 600;
+}
+
+.btn.btn-secondary:hover,
+.btn-secondary:hover {
+  background: var(--color-primary-alpha-8);
+  border-color: var(--color-primary);
+  transform: translateY(-1px);
+}
+
+.btn.btn-secondary:active,
+.btn-secondary:active {
+  transform: translateY(0);
+}
+
+.btn.btn-danger,
+.btn-danger {
+  background: var(--color-error);
+  color: #ffffff;
+  border: none;
+  font-weight: 600;
+  box-shadow: 0 2px 6px rgba(211, 47, 47, 0.25);
+}
+
+.btn.btn-danger:hover,
+.btn-danger:hover {
+  filter: brightness(1.08);
+  box-shadow: 0 4px 14px rgba(211, 47, 47, 0.35);
+  transform: translateY(-1px);
+}
+
+.btn.btn-danger:active,
+.btn-danger:active {
+  transform: translateY(0) scale(0.98);
+}
+
+.btn:disabled,
+.btn-primary:disabled,
+.btn-secondary:disabled,
+.btn-danger:disabled {
+  opacity: 0.48;
+  cursor: not-allowed;
+  transform: none !important;
+  box-shadow: none !important;
+  filter: none !important;
+}
+
+
+/* ============================================================
+   RICH UI — Form Inputs (global enhanced treatment)
+   ============================================================ */
+
+.form-group label {
+  font-size: 0.6875rem;
+  font-weight: 700;
+  color: var(--color-text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  margin-bottom: 4px;
+}
+
+.form-group input,
+.form-group select,
+.form-group textarea,
+.form-input {
+  color: var(--color-text);
+  background: var(--color-surface);
+  border: 1.5px solid var(--color-border);
+  border-radius: 8px;
+  padding: 8px 12px;
+  font-family: inherit;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.form-group input:focus,
+.form-group select:focus,
+.form-group textarea:focus,
+.form-input:focus {
+  border-color: var(--color-primary);
+  box-shadow: var(--input-focus-ring);
+  outline: none;
+}
+
+/* Placeholder text all themes */
+input::placeholder,
+textarea::placeholder {
+  color: var(--color-text-secondary);
+  opacity: 0.60;
+}
+
+
+/* ============================================================
+   RICH UI — Status Badges (theme-aware)
+   ============================================================ */
+
+.status-badge.success {
+  background: var(--badge-success-bg);
+  color: var(--badge-success-fg);
+}
+
+.status-badge.warning {
+  background: var(--badge-warning-bg);
+  color: var(--badge-warning-fg);
+}
+
+.status-badge.danger {
+  background: var(--badge-danger-bg);
+  color: var(--badge-danger-fg);
+}
+
+.status-badge.info,
+.status-badge.neutral {
+  background: var(--badge-neutral-bg);
+  color: var(--badge-neutral-fg);
+}
+
+
+/* ============================================================
+   RICH UI — Stat Cards
+   ============================================================ */
+
+.stat-cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  gap: 16px;
+  margin-bottom: 24px;
+}
+
+.stat-card {
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  padding: 18px 20px;
+  box-shadow: var(--shadow-card);
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  position: relative;
+  overflow: hidden;
+}
+
+.stat-card::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 3px;
+  background: var(--color-primary);
+  border-radius: 0 0 2px 2px;
+}
+
+.stat-card.success::before { background: var(--color-success); }
+.stat-card.warning::before { background: var(--color-warning); }
+.stat-card.danger::before  { background: var(--color-error);   }
+
+.stat-card:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-raised);
+}
+
+.stat-card-icon {
+  font-size: 1.625rem;
+  display: block;
+  margin-bottom: 6px;
+}
+
+.stat-card-label {
+  font-size: 0.6875rem;
+  font-weight: 700;
+  color: var(--color-text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.07em;
+  margin-bottom: 4px;
+}
+
+.stat-card-value {
+  font-size: 1.625rem;
+  font-weight: 800;
+  color: var(--color-text);
+  letter-spacing: -0.03em;
+  line-height: 1.1;
+}
+
+.stat-card-sub {
+  font-size: 0.8125rem;
+  color: var(--color-text-secondary);
+  margin-top: 4px;
+}
+
+
+/* ============================================================
+   RICH UI — Expense Summary Cards
+   ============================================================ */
+
+.exp-summary-cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 12px;
+  margin-bottom: 20px;
+}
+
+.exp-summary-card {
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: 10px;
+  padding: 14px 16px;
+  box-shadow: var(--shadow-card);
+}
+
+.exp-summary-card .card-label {
+  font-size: 0.6875rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.07em;
+  color: var(--color-text-secondary);
+  margin-bottom: 4px;
+}
+
+.exp-summary-card .card-value {
+  font-size: 1.125rem;
+  font-weight: 800;
+  color: var(--color-text);
+  letter-spacing: -0.02em;
+}
+
+/* Inline error/empty message in inventory table */
+.inv-empty-message {
+  text-align: center;
+  color: var(--color-text-secondary);
+  padding: 28px;
+  font-size: 0.9375rem;
+  font-style: italic;
+}
+
+
+/* ============================================================
+   RICH UI — Report Tabs
+   ============================================================ */
+
+.report-tabs {
+  background: var(--color-bg);
+  border: 1px solid var(--color-border);
+  border-radius: 10px;
+  padding: 4px;
+  box-shadow: var(--shadow-xs);
+}
+
+.report-tab {
+  border-radius: 8px;
+  font-size: 0.875rem;
+  font-weight: 600;
+  padding: 9px 18px;
+  color: var(--color-text-secondary);
+  transition: color 0.15s ease, background-color 0.15s ease;
+}
+
+.report-tab:hover {
+  color: var(--color-primary);
+  background: var(--color-primary-alpha-8);
+}
+
+.report-tab.active {
+  background: var(--color-primary);
+  color: #ffffff;
+  box-shadow: 0 2px 8px var(--color-primary-alpha-24);
+}
+
+
+/* ============================================================
+   RICH UI — Bulk Action Bar
+   ============================================================ */
+
+.bulk-action-bar {
+  background: var(--color-primary);
+  border-radius: 10px;
+  box-shadow: 0 4px 14px var(--color-primary-alpha-24);
+  margin-bottom: 12px;
+}
+
+
+/* ============================================================
+   RICH UI — Dialogs
+   ============================================================ */
+
+.confirm-dialog {
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-dialog);
+  border: 1px solid var(--color-border);
+}
+
+.confirm-dialog-message {
+  font-size: 0.9375rem;
+  color: var(--color-text);
+  line-height: 1.6;
+}
+
+.modal {
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-dialog);
+  border: 1px solid var(--color-border);
+}
+
+.modal h2 {
+  font-size: 1.125rem;
+  font-weight: 700;
+  color: var(--color-text);
+}
+
+
+/* ============================================================
+   RICH UI — Toast
+   ============================================================ */
+
+.toast {
+  border-radius: 10px;
+  font-weight: 500;
+  box-shadow: var(--shadow-raised);
+  padding: 12px 18px;
+}
+
+
+/* ============================================================
+   RICH UI — Empty State
+   ============================================================ */
+
+.empty-state {
+  padding: 56px 24px;
+}
+
+.empty-state .empty-icon { font-size: 3.5rem; }
+.empty-state .empty-title { font-weight: 700; }
+.empty-state .empty-message { font-size: 0.9375rem; }
+
+
+/* ============================================================
+   RICH UI — Scrollbars (theme-aware)
+   ============================================================ */
+
+::-webkit-scrollbar { width: 7px; height: 7px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb {
+  background-color: var(--color-border);
+  border-radius: 4px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background-color: var(--color-text-secondary);
+}
+
+
+/* ============================================================
+   RICH UI — Blue Theme — Text Visibility Fixes
+   ============================================================ */
+
+[data-theme="blue"] input,
+[data-theme="blue"] textarea,
+[data-theme="blue"] select,
+[data-theme="blue"] select option {
+  color: var(--color-text);
+  background-color: var(--color-surface);
+  border-color: var(--color-border);
+}
+
+[data-theme="blue"] input::placeholder,
+[data-theme="blue"] textarea::placeholder {
+  color: var(--color-text-secondary);
+  opacity: 0.60;
+}
+
+[data-theme="blue"] .data-table th {
+  background: var(--color-bg);
+  color: var(--color-text-secondary);
+}
+
+[data-theme="blue"] .data-table td {
+  color: var(--color-text);
+}
+
+[data-theme="blue"] .modal-dialog,
+[data-theme="blue"] .modal {
+  background: var(--color-surface);
+  border-color: var(--color-border);
+}
+
+[data-theme="blue"] .modal-dialog input,
+[data-theme="blue"] .modal-dialog select,
+[data-theme="blue"] .modal-dialog textarea,
+[data-theme="blue"] .modal input,
+[data-theme="blue"] .modal select {
+  color: var(--color-text);
+  background: var(--color-surface);
+  border-color: var(--color-border);
+}
+
+[data-theme="blue"] .toolbar,
+[data-theme="blue"] .inv-toolbar,
+[data-theme="blue"] .section-card,
+[data-theme="blue"] .ie-section,
+[data-theme="blue"] .settings-section,
+[data-theme="blue"] .billing-section,
+[data-theme="blue"] .exp-form-container {
+  background: var(--color-surface);
+  border-color: var(--color-border);
+  color: var(--color-text);
+}
+
+[data-theme="blue"] .confirm-dialog,
+[data-theme="blue"] .confirm-dialog-message {
+  background: var(--color-surface);
+  color: var(--color-text);
+}
+
+[data-theme="blue"] .sidebar {
+  background: var(--color-surface);
+}
+
+[data-theme="blue"] .nav-item {
+  color: var(--color-text);
+}
+
+[data-theme="blue"] .nav-item:hover {
+  color: var(--color-primary);
+}
+
+[data-theme="blue"] .nav-item.active {
+  color: #ffffff;
+}
+
+
+/* ============================================================
+   RICH UI — Dark Theme — Supplemental Visibility Fixes
+   ============================================================ */
+
+[data-theme="dark"] .modal-dialog {
+  background: var(--color-surface);
+  border-color: var(--color-border);
+}
+
+[data-theme="dark"] .modal-dialog h3 {
+  color: var(--color-text);
+  border-color: var(--color-border);
+}
+
+[data-theme="dark"] .modal-dialog .form-row label,
+[data-theme="dark"] .form-grid .form-row label {
+  color: var(--color-text-secondary);
+}
+
+[data-theme="dark"] .modal-dialog input,
+[data-theme="dark"] .modal-dialog select,
+[data-theme="dark"] .modal-dialog textarea,
+[data-theme="dark"] .form-grid .form-row input,
+[data-theme="dark"] .form-grid .form-row select {
+  color: var(--color-text);
+  background: var(--color-surface);
+  border-color: var(--color-border);
+}
+
+[data-theme="dark"] .btn-cancel {
+  color: var(--color-text-secondary);
+  border-color: var(--color-border);
+}
+
+[data-theme="dark"] .btn-cancel:hover {
+  background: var(--color-bg);
+  color: var(--color-text);
+}
+
+[data-theme="dark"] .toolbar,
+[data-theme="dark"] .inv-toolbar {
+  background: var(--color-surface);
+  border-color: var(--color-border);
+}
+
+[data-theme="dark"] .inv-search-input,
+[data-theme="dark"] .inv-filter-select {
+  color: var(--color-text);
+  background: var(--color-surface);
+  border-color: var(--color-border);
+}
+
+[data-theme="dark"] .report-tabs {
+  background: var(--color-bg);
+  border-color: var(--color-border);
+}
+
+[data-theme="dark"] .report-tab {
+  color: var(--color-text-secondary);
+}
+
+[data-theme="dark"] .report-tab:hover {
+  color: var(--color-primary);
+}
+
+[data-theme="dark"] .form-actions {
+  border-color: var(--color-border);
+}
+
+[data-theme="dark"] .exp-summary-card,
+[data-theme="dark"] .stat-card {
+  background: var(--color-surface);
+  border-color: var(--color-border);
+}
+
+[data-theme="dark"] .stat-card-value,
+[data-theme="dark"] .exp-summary-card .card-value {
+  color: var(--color-text);
+}
+
+[data-theme="dark"] .stat-card-label,
+[data-theme="dark"] .exp-summary-card .card-label {
+  color: var(--color-text-secondary);
+}
+
+[data-theme="dark"] .section-heading {
+  color: var(--color-text);
+}
+
+[data-theme="dark"] .screen-content .screen-title {
+  color: var(--color-text);
+  border-color: var(--color-border);
+}
+
+[data-theme="dark"] .billing-barcode-section {
+  background: linear-gradient(135deg,
+    var(--color-primary-alpha-8) 0%,
+    var(--color-surface) 100%);
+  border-color: var(--color-primary-alpha-24);
+}
+
+[data-theme="dark"] .confirm-dialog {
+  background: var(--color-surface);
+  border-color: var(--color-border);
+}
+
+[data-theme="dark"] .confirm-dialog-message {
+  color: var(--color-text);
+}
+
+
+/* ============================================================
+   RICH UI — Responsive Adjustments
+   ============================================================ */
+
+@media (max-width: 768px) {
+  .stat-cards {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 10px;
+  }
+
+  .stat-card {
+    padding: 14px 16px;
+  }
+
+  .stat-card-value {
+    font-size: 1.25rem;
+  }
+
+  .modal-dialog {
+    padding: 20px;
+    border-radius: 16px 16px 0 0;
+    max-height: 90vh;
+  }
+
+  .screen-content .screen-title,
+  section.screen .screen-title {
+    font-size: 1.125rem;
+    margin-bottom: 14px;
+    padding-bottom: 10px;
+  }
+
+  .section-heading {
+    font-size: 0.9375rem;
+    margin-bottom: 10px;
+  }
+
+  .exp-summary-cards {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 8px;
+  }
+
+  .form-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 480px) {
+  .stat-cards {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 8px;
+  }
+
+  .section-card,
+  .ie-section,
+  .settings-section,
+  .billing-section,
+  .exp-form-container {
+    padding: 14px 16px;
+    border-radius: 10px;
+  }
+
+  .modal-dialog {
+    padding: 16px;
+  }
 }

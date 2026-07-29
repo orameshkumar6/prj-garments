@@ -1,5 +1,5 @@
 /**
- * Cloth Shop Firebase - Transaction History Module
+ * Prj-Garments Firebase - Transaction History Module
  * Transaction listing, date filtering, deletion with audit logging.
  * Uses DataLayer for Firestore operations, Utils for UI notifications and formatting.
  */

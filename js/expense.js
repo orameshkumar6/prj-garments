@@ -1,5 +1,5 @@
 /**
- * Cloth Shop Firebase - Expense Tracker Module
+ * Prj-Garments Firebase - Expense Tracker Module
  * Expense recording with classification, validation, filtering, and summary computation.
  * Requirements: 9.1, 9.2, 9.3, 9.4, 9.5, 9.6
  */
