@@ -1,4 +1,4 @@
-var CACHE_NAME = 'prj-garments-v2';
+var CACHE_NAME = 'prj-garments-v3';
 var ASSETS = [
   './',
   './index.html',
@@ -11,11 +11,13 @@ var ASSETS = [
   './js/printer.js',
   './js/settings.js',
   './js/inventory.js',
+  './js/vendor.js',
   './js/billing.js',
   './js/sales-engine.js',
   './js/reports.js',
   './js/expense.js',
-  './js/material-request.js',
+  './js/employee.js',
+  './js/attendance.js',
   './js/barcode-printer.js',
   './js/import-export.js',
   './js/transaction-history.js',
