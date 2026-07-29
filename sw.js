@@ -1,4 +1,4 @@
-var CACHE_NAME = 'prj-garments-v4';
+var CACHE_NAME = 'prj-garments-v5';
 var ASSETS = [
   './',
   './index.html',
@@ -54,19 +54,18 @@ self.addEventListener('fetch', function(event) {
   var url = new URL(event.request.url);
   if (url.origin !== self.location.origin) return;
 
+  // Network-first: always try network, fall back to cache when offline
   event.respondWith(
-    caches.match(event.request).then(function(cached) {
-      return cached || fetch(event.request).then(function(response) {
-        if (response.status === 200) {
-          var clone = response.clone();
-          caches.open(CACHE_NAME).then(function(cache) { cache.put(event.request, clone); });
-        }
-        return response;
-      });
-    }).catch(function() {
-      if (event.request.destination === 'document') {
-        return caches.match('./index.html');
+    fetch(event.request).then(function(response) {
+      if (response.status === 200) {
+        var clone = response.clone();
+        caches.open(CACHE_NAME).then(function(cache) { cache.put(event.request, clone); });
       }
+      return response;
+    }).catch(function() {
+      return caches.match(event.request).then(function(cached) {
+        return cached || (event.request.destination === 'document' ? caches.match('./index.html') : undefined);
+      });
     })
   );
 });

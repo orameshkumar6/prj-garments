@@ -10,6 +10,7 @@ var Reports = (function () {
   var _salesReportData = [];
   var _stockReportData = [];
   var _reorderReportData = [];
+  var _rfqPendingGroups = [];
 
   // ─── Constants ──────────────────────────────────────────────────────────────
 
@@ -561,8 +562,9 @@ var Reports = (function () {
     actionBar.appendChild(poBtn);
     screen.appendChild(actionBar);
 
-    // RFQ vendor-selection modal
+    // RFQ vendor-selection modal and compose modal
     _setupRFQModal(screen);
+    _setupRFQComposeModal(screen);
 
     // Event listeners
     generateBtn.addEventListener('click', _handleGenerateSalesReport);
@@ -1188,6 +1190,336 @@ var Reports = (function () {
     if (modal) modal.hidden = true;
   }
 
+  // ─── RFQ Compose Modal ───────────────────────────────────────────────────────
+
+  function _setupRFQComposeModal(screen) {
+    var wrapper = document.createElement('div');
+    wrapper.innerHTML =
+      '<div id="rfq-compose-modal" class="rfq-compose-overlay" hidden>' +
+        '<div class="rfq-compose-dialog" role="dialog" aria-modal="true" aria-labelledby="rfq-compose-title">' +
+          '<div class="rfq-compose-header">' +
+            '<h3 id="rfq-compose-title">Compose RFQ</h3>' +
+            '<span id="rfq-compose-vendor-info" class="rfq-compose-vendor-info"></span>' +
+          '</div>' +
+          '<div class="rfq-compose-body">' +
+            '<div class="form-row">' +
+              '<label for="rfq-compose-message">Quote Request Message</label>' +
+              '<textarea id="rfq-compose-message" class="rfq-compose-textarea" rows="6"></textarea>' +
+            '</div>' +
+            '<div class="rfq-compose-options">' +
+              '<label class="rfq-toggle-label">' +
+                '<input type="checkbox" id="rfq-hide-prices">' +
+                '<span>Hide unit prices on PDF</span>' +
+              '</label>' +
+            '</div>' +
+            '<div id="rfq-compose-preview" class="rfq-compose-preview"></div>' +
+          '</div>' +
+          '<div class="rfq-compose-footer">' +
+            '<button type="button" id="rfq-compose-save" class="btn btn-secondary">💾 Save to Firestore</button>' +
+            '<button type="button" id="rfq-compose-print" class="btn btn-primary">🖨️ Print PDF</button>' +
+            '<button type="button" id="rfq-compose-wa" class="btn btn-whatsapp">💬 WhatsApp</button>' +
+            '<button type="button" id="rfq-compose-cancel" class="btn btn-cancel">Cancel</button>' +
+          '</div>' +
+        '</div>' +
+      '</div>';
+    screen.appendChild(wrapper.firstElementChild);
+
+    document.getElementById('rfq-hide-prices').addEventListener('change', function () {
+      _renderRFQComposePreview(_rfqPendingGroups, this.checked);
+    });
+    document.getElementById('rfq-compose-save').addEventListener('click', function () {
+      _rfqSaveToFirestore(_rfqPendingGroups);
+    });
+    document.getElementById('rfq-compose-print').addEventListener('click', function () {
+      _rfqPrintPreview(_rfqPendingGroups, _getRFQComposeOptions());
+    });
+    document.getElementById('rfq-compose-wa').addEventListener('click', function () {
+      _rfqShareWhatsApp(_rfqPendingGroups, _getRFQComposeOptions());
+    });
+    document.getElementById('rfq-compose-cancel').addEventListener('click', _closeRFQComposeModal);
+  }
+
+  function _openRFQComposeModal(groups) {
+    _rfqPendingGroups = groups;
+
+    var info = document.getElementById('rfq-compose-vendor-info');
+    if (info) {
+      info.textContent = groups.length === 1
+        ? groups[0].vendorInfo.vendor_name + ' (' + groups[0].vendorInfo.vendor_code + ')'
+        : groups.length + ' vendors';
+    }
+
+    var msgArea = document.getElementById('rfq-compose-message');
+    if (msgArea) {
+      var storeInfo = (typeof Settings !== 'undefined' && Settings.getStoreInfo) ? Settings.getStoreInfo() : {};
+      var storeName = storeInfo.store_name || '';
+      var greeting = groups.length === 1 ? groups[0].vendorInfo.vendor_name : 'Sir/Madam';
+      msgArea.value =
+        'Dear ' + greeting + ',\n\n' +
+        'We kindly request you to provide your best quotation for the items listed below. ' +
+        'Please include the unit price, availability, and expected delivery date for each item.\n\n' +
+        'Kindly respond at your earliest convenience.\n\n' +
+        'Thank you.\n\nRegards,\n' + (storeName || 'Our Company');
+    }
+
+    var hp = document.getElementById('rfq-hide-prices');
+    if (hp) hp.checked = false;
+
+    _renderRFQComposePreview(groups, false);
+    document.getElementById('rfq-compose-modal').hidden = false;
+  }
+
+  function _closeRFQComposeModal() {
+    var modal = document.getElementById('rfq-compose-modal');
+    if (modal) modal.hidden = true;
+  }
+
+  function _getRFQComposeOptions() {
+    var msg = document.getElementById('rfq-compose-message');
+    var hp  = document.getElementById('rfq-hide-prices');
+    return {
+      message:    msg ? msg.value : '',
+      hidePrices: hp  ? hp.checked : false
+    };
+  }
+
+  function _renderRFQComposePreview(groups, hidePrices) {
+    var container = document.getElementById('rfq-compose-preview');
+    if (!container) return;
+    var html = '';
+    for (var i = 0; i < groups.length; i++) {
+      var g = groups[i];
+      html += '<div class="rfq-preview-group">';
+      if (groups.length > 1) {
+        html += '<div class="rfq-preview-group-header">' +
+          Utils.escapeHtml(g.vendorInfo.vendor_name) + ' (' + Utils.escapeHtml(g.vendorInfo.vendor_code) + ')' +
+          '</div>';
+      }
+      html += '<div class="inv-table-container table-wrapper"><table class="data-table">' +
+        '<thead><tr><th>Item Code</th><th>Item Name</th><th>Qty</th>';
+      if (!hidePrices) html += '<th>Cost Price</th><th>Total</th>';
+      html += '</tr></thead><tbody>';
+      var total = 0;
+      for (var j = 0; j < g.lineItems.length; j++) {
+        var item = g.lineItems[j];
+        var lt = (item.qty || 0) * (item.unit_price || 0);
+        total += lt;
+        html += '<tr><td>' + Utils.escapeHtml(item.item_code || '') + '</td>' +
+          '<td>' + Utils.escapeHtml(item.item_name || '') + '</td>' +
+          '<td style="text-align:right">' + (item.qty || 0) + '</td>';
+        if (!hidePrices) {
+          html += '<td style="text-align:right">' + Utils.formatCurrency(item.unit_price || 0) + '</td>' +
+            '<td style="text-align:right">' + Utils.formatCurrency(lt) + '</td>';
+        }
+        html += '</tr>';
+      }
+      html += '</tbody>';
+      if (!hidePrices) {
+        html += '<tfoot><tr><td colspan="3"></td>' +
+          '<td style="text-align:right"><strong>Total</strong></td>' +
+          '<td style="text-align:right"><strong>' + Utils.formatCurrency(Math.round(total * 100) / 100) + '</strong></td>' +
+          '</tr></tfoot>';
+      }
+      html += '</table></div></div>';
+    }
+    container.innerHTML = html;
+  }
+
+  async function _rfqSaveToFirestore(groups) {
+    var btn = document.getElementById('rfq-compose-save');
+    if (btn) { btn.disabled = true; btn.textContent = 'Saving…'; }
+    var created = 0, failed = 0;
+    for (var i = 0; i < groups.length; i++) {
+      var result = await saveDocument('RFQ', groups[i].lineItems, groups[i].vendorInfo);
+      if (result.success) { groups[i].savedDocNumber = result.doc_number; created++; }
+      else failed++;
+    }
+    if (btn) { btn.disabled = false; btn.textContent = created > 0 ? '✅ Saved' : '💾 Save to Firestore'; }
+    if (created > 0) {
+      Utils.showToast(created + ' RFQ' + (created > 1 ? 's' : '') + ' saved.' + (failed > 0 ? ' ' + failed + ' failed.' : ''), 'success');
+    } else {
+      Utils.showToast('Failed to save.', 'error');
+    }
+  }
+
+  function _rfqPrintPreview(groups, options) {
+    var storeInfo = (typeof Settings !== 'undefined' && Settings.getStoreInfo) ? Settings.getStoreInfo() : {};
+    var storeName   = storeInfo.store_name    || 'Our Company';
+    var storeAddr   = storeInfo.store_address || '';
+    var storePhone  = storeInfo.store_phone   || '';
+    var today       = new Date().toLocaleDateString();
+    var waText      = _buildWhatsAppText(groups, options, storeName, storePhone, today);
+
+    var html = '<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8">' +
+      '<title>Request for Quotation</title><style>' + _getRFQPrintCSS() + '</style></head><body>' +
+      '<div class="print-controls">' +
+        '<button class="btn-print" onclick="window.print()">🖨️ Print / Save PDF</button>' +
+        '<button class="btn-wa" onclick="shareWA()">💬 Share via WhatsApp</button>' +
+        '<button class="btn-cls" onclick="window.close()">✕ Close</button>' +
+        '<span class="print-hint">In print dialog → choose "Save as PDF" as destination</span>' +
+      '</div>';
+
+    for (var i = 0; i < groups.length; i++) {
+      var g = groups[i];
+      var docNum = g.savedDocNumber || ('RFQ-DRAFT-' + (i + 1));
+      var msg = _escPrint(options.message);
+      html += '<div class="rfq-page">' +
+        '<div class="rfq-hdr">' +
+          '<div class="rfq-company">' +
+            '<h1>' + _escPrint(storeName) + '</h1>' +
+            (storeAddr  ? '<p>' + _escPrint(storeAddr)  + '</p>' : '') +
+            (storePhone ? '<p>' + _escPrint(storePhone) + '</p>' : '') +
+          '</div>' +
+          '<div class="rfq-meta">' +
+            '<div class="rfq-doc-type">REQUEST FOR QUOTATION</div>' +
+            '<p><b>Doc No:</b> ' + _escPrint(docNum) + '</p>' +
+            '<p><b>Date:</b> '   + _escPrint(today)  + '</p>' +
+          '</div>' +
+        '</div>' +
+        '<div class="rfq-to"><b>To:</b> ' +
+          _escPrint(g.vendorInfo.vendor_name) +
+          (g.vendorInfo.vendor_code ? ' (' + _escPrint(g.vendorInfo.vendor_code) + ')' : '') +
+        '</div>' +
+        (msg ? '<div class="rfq-msg">' + msg + '</div>' : '') +
+        '<table><thead><tr>' +
+          '<th>#</th><th>Item Code</th><th>Item Name</th><th class="r">Qty</th>' +
+          (!options.hidePrices ? '<th class="r">Unit Price</th><th class="r">Line Total</th>' : '') +
+        '</tr></thead><tbody>';
+
+      var total = 0;
+      for (var j = 0; j < g.lineItems.length; j++) {
+        var li = g.lineItems[j];
+        var lt = (li.qty || 0) * (li.unit_price || 0);
+        total += lt;
+        html += '<tr>' +
+          '<td>' + (j + 1) + '</td>' +
+          '<td>' + _escPrint(li.item_code || '') + '</td>' +
+          '<td>' + _escPrint(li.item_name || '') + '</td>' +
+          '<td class="r">' + (li.qty || 0) + '</td>';
+        if (!options.hidePrices) {
+          html += '<td class="r">&#8377;' + (li.unit_price || 0).toFixed(2) + '</td>' +
+            '<td class="r">&#8377;' + lt.toFixed(2) + '</td>';
+        }
+        html += '</tr>';
+      }
+      html += '</tbody>';
+      if (!options.hidePrices) {
+        html += '<tfoot><tr>' +
+          '<td colspan="4"></td>' +
+          '<td class="r"><b>Total</b></td>' +
+          '<td class="r"><b>&#8377;' + (Math.round(total * 100) / 100).toFixed(2) + '</b></td>' +
+          '</tr></tfoot>';
+      }
+      html += '</table>' +
+        '<div class="rfq-footer">' +
+          '<span>This is a Request for Quotation only — not a purchase order.</span>' +
+          '<span>' + _escPrint(storeName) + (storePhone ? ' | ' + _escPrint(storePhone) : '') + '</span>' +
+        '</div>' +
+        '</div>';
+    }
+
+    html += '<scr' + 'ipt>var _wa=' + JSON.stringify(waText) + ';' +
+      'function shareWA(){' +
+        'if(navigator.share){navigator.share({title:"RFQ",text:_wa}).catch(function(){});}' +
+        'else{window.open("https://wa.me/?text="+encodeURIComponent(_wa),"_blank");}' +
+      '}' +
+      '</scr' + 'ipt></body></html>';
+
+    var win = window.open('', '_blank', 'width=960,height=720,menubar=yes,toolbar=yes,scrollbars=yes');
+    if (win) {
+      win.document.open();
+      win.document.write(html);
+      win.document.close();
+      win.focus();
+    } else {
+      Utils.showToast('Please allow popups to preview the PDF.', 'error');
+    }
+  }
+
+  function _rfqShareWhatsApp(groups, options) {
+    var storeInfo  = (typeof Settings !== 'undefined' && Settings.getStoreInfo) ? Settings.getStoreInfo() : {};
+    var storeName  = storeInfo.store_name  || 'Our Company';
+    var storePhone = storeInfo.store_phone || '';
+    var today      = new Date().toLocaleDateString();
+    var text = _buildWhatsAppText(groups, options, storeName, storePhone, today);
+    if (navigator.share) {
+      navigator.share({ title: 'Request for Quotation', text: text }).catch(function () {});
+    } else {
+      window.open('https://wa.me/?text=' + encodeURIComponent(text), '_blank');
+    }
+  }
+
+  function _buildWhatsAppText(groups, options, storeName, storePhone, today) {
+    var lines = ['*REQUEST FOR QUOTATION*', 'Date: ' + today, ''];
+    for (var i = 0; i < groups.length; i++) {
+      var g = groups[i];
+      var docNum = g.savedDocNumber || '';
+      if (groups.length > 1) {
+        lines.push('*Vendor: ' + g.vendorInfo.vendor_name + ' (' + g.vendorInfo.vendor_code + ')*');
+      }
+      if (docNum) lines.push('Doc No: ' + docNum);
+      if (options.message) { lines.push(''); lines.push(options.message); }
+      lines.push('');
+      lines.push('*Items:*');
+      var total = 0;
+      for (var j = 0; j < g.lineItems.length; j++) {
+        var li = g.lineItems[j];
+        var lt = (li.qty || 0) * (li.unit_price || 0);
+        total += lt;
+        var line = (j + 1) + '. ' + li.item_name + ' (' + li.item_code + ') — Qty: ' + li.qty;
+        if (!options.hidePrices) line += ' @ ₹' + (li.unit_price || 0).toFixed(2);
+        lines.push(line);
+      }
+      if (!options.hidePrices) {
+        lines.push('*Total: ₹' + (Math.round(total * 100) / 100).toFixed(2) + '*');
+      }
+      lines.push('');
+    }
+    lines.push('Regards,');
+    lines.push(storeName + (storePhone ? ' | ' + storePhone : ''));
+    return lines.join('\n');
+  }
+
+  function _getRFQPrintCSS() {
+    return '@page{margin:18mm 14mm}' +
+      '*{box-sizing:border-box;margin:0;padding:0}' +
+      'body{font-family:Arial,Helvetica,sans-serif;font-size:11pt;color:#111;background:#fff}' +
+      '.rfq-page{padding:0;page-break-after:always}' +
+      '.rfq-page:last-child{page-break-after:avoid}' +
+      '.rfq-hdr{display:flex;justify-content:space-between;align-items:flex-start;' +
+        'border-bottom:2.5px solid #222;padding-bottom:14px;margin-bottom:18px;gap:16px}' +
+      '.rfq-company h1{font-size:17pt;font-weight:800;margin-bottom:5px}' +
+      '.rfq-company p{font-size:9.5pt;color:#555;margin-top:2px}' +
+      '.rfq-meta{text-align:right;flex-shrink:0}' +
+      '.rfq-doc-type{font-size:14pt;font-weight:700;color:#222;margin-bottom:6px;letter-spacing:.04em}' +
+      '.rfq-meta p{font-size:10pt;margin-top:3px}' +
+      '.rfq-to{margin:14px 0;padding:10px 14px;background:#f5f5f5;border-left:4px solid #333;font-size:10.5pt}' +
+      '.rfq-msg{margin:16px 0;font-size:10.5pt;white-space:pre-wrap;line-height:1.65;color:#222}' +
+      'table{width:100%;border-collapse:collapse;margin-top:18px}' +
+      'thead th{background:#333;color:#fff;padding:8px 10px;text-align:left;font-size:10pt;font-weight:600}' +
+      'tbody td{padding:7px 10px;border-bottom:1px solid #ddd;font-size:10pt}' +
+      'tbody tr:nth-child(even) td{background:#f9f9f9}' +
+      'tfoot td{padding:8px 10px;font-size:10.5pt;border-top:2px solid #333}' +
+      '.r{text-align:right}' +
+      '.rfq-footer{display:flex;justify-content:space-between;border-top:1px solid #ccc;' +
+        'margin-top:28px;padding-top:10px;font-size:9pt;color:#777}' +
+      '.print-controls{display:flex;gap:10px;align-items:center;background:#f0f4ff;' +
+        'padding:10px 16px;border-bottom:1px solid #bbd;margin-bottom:20px;flex-wrap:wrap}' +
+      '.print-controls button{padding:8px 14px;cursor:pointer;border:none;border-radius:6px;' +
+        'font-size:12px;font-weight:600}' +
+      '.btn-print{background:#6200ea;color:#fff}' +
+      '.btn-wa{background:#25D366;color:#fff}' +
+      '.btn-cls{background:#e0e0e0;color:#333}' +
+      '.print-hint{margin-left:auto;font-size:10px;color:#888;font-style:italic}' +
+      '@media print{.print-controls{display:none!important}}';
+  }
+
+  function _escPrint(str) {
+    return String(str || '')
+      .replace(/&/g, '&amp;').replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+  }
+
   async function _lookupItemVendors(itemCodes) {
     var result = {};
     try {
@@ -1217,35 +1549,29 @@ var Reports = (function () {
     var itemCodes = _salesReportData.map(function (i) { return i.item_code; });
     var vendorLookup = await _lookupItemVendors(itemCodes);
 
-    var vendorGroups = {};
+    var vendorGroupMap = {};
     for (var i = 0; i < _salesReportData.length; i++) {
       var item = _salesReportData[i];
       var vi = vendorLookup[item.item_code] || { vendor_code: 'UNKNOWN', vendor_name: 'Unknown Vendor' };
-      if (!vendorGroups[vi.vendor_code]) {
-        vendorGroups[vi.vendor_code] = { vendorInfo: vi, items: [] };
+      if (!vendorGroupMap[vi.vendor_code]) {
+        vendorGroupMap[vi.vendor_code] = { vendorInfo: vi, items: [] };
       }
-      vendorGroups[vi.vendor_code].items.push(item);
+      vendorGroupMap[vi.vendor_code].items.push(item);
     }
 
-    var codes = Object.keys(vendorGroups);
-    var created = 0;
-    var failed = 0;
-
+    var groups = [];
+    var codes = Object.keys(vendorGroupMap);
     for (var j = 0; j < codes.length; j++) {
-      var group = vendorGroups[codes[j]];
-      var doc = generateRFQ(group.items);
-      if (!doc.success) { failed++; continue; }
-      var result = await saveDocument('RFQ', doc.line_items, group.vendorInfo);
-      if (result.success) created++;
-      else failed++;
+      var g = vendorGroupMap[codes[j]];
+      var doc = generateRFQ(g.items);
+      if (doc.success) groups.push({ vendorInfo: g.vendorInfo, lineItems: doc.line_items, savedDocNumber: null });
     }
 
-    if (created > 0) {
-      Utils.showToast(created + ' RFQ' + (created > 1 ? 's' : '') + ' created for ' + codes.length +
-        ' vendor' + (codes.length > 1 ? 's' : '') + (failed > 0 ? '. ' + failed + ' failed.' : '.'), 'success');
-    } else {
-      Utils.showToast('Failed to create RFQs.', 'error');
+    if (groups.length === 0) {
+      Utils.showToast('No valid items to generate RFQ.', 'error');
+      return;
     }
+    _openRFQComposeModal(groups);
   }
 
   async function _handleRFQSingleVendor(vendorCode, vendorName) {
@@ -1254,12 +1580,7 @@ var Reports = (function () {
       Utils.showToast(doc.error || 'Failed to generate RFQ.', 'error');
       return;
     }
-    var result = await saveDocument('RFQ', doc.line_items, { vendor_code: vendorCode, vendor_name: vendorName });
-    if (result.success) {
-      Utils.showToast('RFQ ' + result.doc_number + ' saved for ' + vendorName + '.', 'success');
-    } else {
-      Utils.showToast(result.error || 'Failed to save RFQ.', 'error');
-    }
+    _openRFQComposeModal([{ vendorInfo: { vendor_code: vendorCode, vendor_name: vendorName }, lineItems: doc.line_items, savedDocNumber: null }]);
   }
 
   /**
