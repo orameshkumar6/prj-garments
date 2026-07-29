@@ -17,6 +17,7 @@ var ExpenseTracker = (function () {
   // ─── Private State ──────────────────────────────────────────────────────────
 
   var _expenses = [];
+  var _salaryGeneratedRows = [];
 
   // ─── Validation ─────────────────────────────────────────────────────────────
 
@@ -247,99 +248,163 @@ var ExpenseTracker = (function () {
 
     return '' +
       '<h2 class="section-heading">Expense Tracker</h2>' +
-      '<!-- Add Expense Form -->' +
-      '<div class="exp-form-container">' +
-        '<h3 class="form-title">Add Expense</h3>' +
-        '<form id="exp-add-form" novalidate>' +
-          '<div class="form-grid">' +
-            '<div class="form-row">' +
-              '<label for="exp-f-date">Date *</label>' +
-              '<input type="date" id="exp-f-date" max="' + todayStr + '" value="' + todayStr + '" required ' +
-                'aria-label="Expense date">' +
-              '<span class="field-error" id="exp-err-date"></span>' +
-            '</div>' +
-            '<div class="form-row">' +
-              '<label for="exp-f-amount">Amount (₹) *</label>' +
-              '<input type="number" id="exp-f-amount" min="0.01" max="9999999.99" ' +
-                'step="0.01" required aria-label="Expense amount">' +
-              '<span class="field-error" id="exp-err-amount"></span>' +
-            '</div>' +
-            '<div class="form-row">' +
-              '<label for="exp-f-description">Description *</label>' +
-              '<input type="text" id="exp-f-description" maxlength="200" required ' +
-                'placeholder="Enter expense description" aria-label="Expense description">' +
-              '<span class="field-error" id="exp-err-description"></span>' +
-            '</div>' +
-            '<div class="form-row">' +
-              '<label for="exp-f-category">Category *</label>' +
-              '<select id="exp-f-category" required aria-label="Expense category">' +
-                '<option value="">-- Select Category --</option>' +
-                '<option value="Capital Expense">Capital Expense</option>' +
-                '<option value="Salary">Salary</option>' +
-                '<option value="Bonus">Bonus</option>' +
-                '<option value="Operational">Operational</option>' +
-                '<option value="Raw Material">Raw Material</option>' +
-                '<option value="Miscellaneous">Miscellaneous</option>' +
-              '</select>' +
-              '<span class="field-error" id="exp-err-category"></span>' +
-            '</div>' +
-          '</div>' +
-          '<!-- Raw Material optional fields -->' +
-          '<div id="exp-raw-material-fields" style="display:none;">' +
+      '<div class="report-tabs" role="tablist">' +
+        '<button type="button" class="report-tab active" id="exp-tab-expenses" role="tab" aria-selected="true">Expenses</button>' +
+        '<button type="button" class="report-tab" id="exp-tab-salary" role="tab" aria-selected="false">Salary</button>' +
+      '</div>' +
+      '<div id="exp-panel-expenses" class="report-panel">' +
+        '<!-- Add Expense Form -->' +
+        '<div class="exp-form-container">' +
+          '<h3 class="form-title">Add Expense</h3>' +
+          '<form id="exp-add-form" novalidate>' +
             '<div class="form-grid">' +
               '<div class="form-row">' +
-                '<label for="exp-f-gst">GST Amount (₹)</label>' +
-                '<input type="number" id="exp-f-gst" min="0" step="0.01" ' +
-                  'placeholder="0.00" aria-label="GST Amount">' +
+                '<label for="exp-f-date">Date *</label>' +
+                '<input type="date" id="exp-f-date" max="' + todayStr + '" value="' + todayStr + '" required ' +
+                  'aria-label="Expense date">' +
+                '<span class="field-error" id="exp-err-date"></span>' +
               '</div>' +
               '<div class="form-row">' +
-                '<label for="exp-f-additional-info">Additional Info</label>' +
-                '<input type="text" id="exp-f-additional-info" maxlength="200" ' +
-                  'placeholder="Vendor name, invoice number, etc." aria-label="Additional Info">' +
+                '<label for="exp-f-amount">Amount (₹) *</label>' +
+                '<input type="number" id="exp-f-amount" min="0.01" max="9999999.99" ' +
+                  'step="0.01" required aria-label="Expense amount">' +
+                '<span class="field-error" id="exp-err-amount"></span>' +
+              '</div>' +
+              '<div class="form-row">' +
+                '<label for="exp-f-description">Description *</label>' +
+                '<input type="text" id="exp-f-description" maxlength="200" required ' +
+                  'placeholder="Enter expense description" aria-label="Expense description">' +
+                '<span class="field-error" id="exp-err-description"></span>' +
+              '</div>' +
+              '<div class="form-row">' +
+                '<label for="exp-f-category">Category *</label>' +
+                '<select id="exp-f-category" required aria-label="Expense category">' +
+                  '<option value="">-- Select Category --</option>' +
+                  '<option value="Capital Expense">Capital Expense</option>' +
+                  '<option value="Salary">Salary</option>' +
+                  '<option value="Bonus">Bonus</option>' +
+                  '<option value="Operational">Operational</option>' +
+                  '<option value="Raw Material">Raw Material</option>' +
+                  '<option value="Miscellaneous">Miscellaneous</option>' +
+                '</select>' +
+                '<span class="field-error" id="exp-err-category"></span>' +
               '</div>' +
             '</div>' +
+            '<!-- Raw Material optional fields -->' +
+            '<div id="exp-raw-material-fields" style="display:none;">' +
+              '<div class="form-grid">' +
+                '<div class="form-row">' +
+                  '<label for="exp-f-gst">GST Amount (₹)</label>' +
+                  '<input type="number" id="exp-f-gst" min="0" step="0.01" ' +
+                    'placeholder="0.00" aria-label="GST Amount">' +
+                '</div>' +
+                '<div class="form-row">' +
+                  '<label for="exp-f-additional-info">Additional Info</label>' +
+                  '<input type="text" id="exp-f-additional-info" maxlength="200" ' +
+                    'placeholder="Vendor name, invoice number, etc." aria-label="Additional Info">' +
+                '</div>' +
+              '</div>' +
+            '</div>' +
+            '<div class="form-actions">' +
+              '<button type="submit" class="btn btn-primary">Add Expense</button>' +
+            '</div>' +
+          '</form>' +
+        '</div>' +
+        '<!-- Category Summary Cards -->' +
+        '<div class="exp-summary-section">' +
+          '<h3 class="section-subheading">Category Summary</h3>' +
+          '<div id="exp-summary-cards" class="exp-summary-cards">' +
+            '<p class="placeholder-text">Loading summary...</p>' +
           '</div>' +
-          '<div class="form-actions">' +
-            '<button type="submit" class="btn btn-primary">Add Expense</button>' +
+        '</div>' +
+        '<!-- Expense List with Filters -->' +
+        '<div class="exp-list-section">' +
+          '<h3 class="section-subheading">Expenses</h3>' +
+          '<div class="exp-filters">' +
+            '<input type="date" id="exp-filter-start" value="' + todayStr + '" aria-label="Filter start date">' +
+            '<input type="date" id="exp-filter-end" value="' + todayStr + '" aria-label="Filter end date">' +
+            '<select id="exp-filter-category" aria-label="Filter by category">' +
+              '<option value="">All Categories</option>' +
+              '<option value="Capital Expense">Capital Expense</option>' +
+              '<option value="Salary">Salary</option>' +
+              '<option value="Bonus">Bonus</option>' +
+              '<option value="Operational">Operational</option>' +
+              '<option value="Raw Material">Raw Material</option>' +
+              '<option value="Miscellaneous">Miscellaneous</option>' +
+            '</select>' +
+            '<button type="button" id="exp-btn-filter" class="btn btn-secondary">Filter</button>' +
           '</div>' +
-        '</form>' +
-      '</div>' +
-      '<!-- Category Summary Cards -->' +
-      '<div class="exp-summary-section">' +
-        '<h3 class="section-subheading">Category Summary</h3>' +
-        '<div id="exp-summary-cards" class="exp-summary-cards">' +
-          '<p class="placeholder-text">Loading summary...</p>' +
+          '<div class="exp-table-container" role="region" aria-label="Expenses table" tabindex="0">' +
+            '<table class="exp-table" id="exp-table">' +
+              '<thead><tr>' +
+                '<th>Date</th><th>Description</th><th>Category</th><th>Amount</th><th>GST</th><th>Info</th>' +
+              '</tr></thead>' +
+              '<tbody id="exp-tbody"></tbody>' +
+            '</table>' +
+            '<p id="exp-empty-msg" class="exp-empty-message" hidden>' +
+              'No expenses have been recorded.' +
+            '</p>' +
+          '</div>' +
         '</div>' +
       '</div>' +
-      '<!-- Expense List with Filters -->' +
-      '<div class="exp-list-section">' +
-        '<h3 class="section-subheading">Expenses</h3>' +
+      '<div id="exp-panel-salary" class="report-panel" style="display:none;">' +
+        _buildSalaryPanelUI() +
+      '</div>';
+  }
+
+  function _buildSalaryPanelUI() {
+    var todayStr = _getTodayString();
+    var firstDay = _getFirstDayOfCurrentMonth();
+
+    return '' +
+      '<div class="exp-form-container">' +
+        '<h3 class="form-title">Generate Salary</h3>' +
         '<div class="exp-filters">' +
-          '<input type="date" id="exp-filter-start" value="' + todayStr + '" aria-label="Filter start date">' +
-          '<input type="date" id="exp-filter-end" value="' + todayStr + '" aria-label="Filter end date">' +
-          '<select id="exp-filter-category" aria-label="Filter by category">' +
-            '<option value="">All Categories</option>' +
-            '<option value="Capital Expense">Capital Expense</option>' +
-            '<option value="Salary">Salary</option>' +
-            '<option value="Bonus">Bonus</option>' +
-            '<option value="Operational">Operational</option>' +
-            '<option value="Raw Material">Raw Material</option>' +
-            '<option value="Miscellaneous">Miscellaneous</option>' +
-          '</select>' +
-          '<button type="button" id="exp-btn-filter" class="btn btn-secondary">Filter</button>' +
+          '<label for="sal-start-date">From:</label>' +
+          '<input type="date" id="sal-start-date" value="' + firstDay + '">' +
+          '<label for="sal-end-date">To:</label>' +
+          '<input type="date" id="sal-end-date" value="' + todayStr + '" max="' + todayStr + '">' +
         '</div>' +
-        '<div class="exp-table-container" role="region" aria-label="Expenses table" tabindex="0">' +
-          '<table class="exp-table" id="exp-table">' +
-            '<thead><tr>' +
-              '<th>Date</th><th>Description</th><th>Category</th><th>Amount</th><th>GST</th><th>Info</th>' +
-            '</tr></thead>' +
-            '<tbody id="exp-tbody"></tbody>' +
-          '</table>' +
-          '<p id="exp-empty-msg" class="exp-empty-message" hidden>' +
-            'No expenses have been recorded.' +
-          '</p>' +
+        '<span class="field-error" id="sal-date-error"></span>' +
+        '<div class="mt-16">' +
+          '<div class="sal-emp-controls">' +
+            '<strong>Select Employees:</strong>' +
+            '<button type="button" id="sal-select-all" class="btn btn-sm btn-secondary">Select All</button>' +
+            '<button type="button" id="sal-clear-all" class="btn btn-sm btn-secondary">Clear All</button>' +
+          '</div>' +
+          '<div id="sal-employee-list" class="sal-employee-list">' +
+            '<p class="placeholder-text">Click the Salary tab to load employees.</p>' +
+          '</div>' +
+        '</div>' +
+        '<div class="form-actions">' +
+          '<button type="button" id="sal-generate-btn" class="btn btn-primary">Generate Salary</button>' +
+        '</div>' +
+      '</div>' +
+      '<div id="sal-preview-section" class="mt-16" style="display:none;">' +
+        '<div class="sal-preview-header">' +
+          '<h3 class="section-subheading">Salary Preview</h3>' +
+          '<button type="button" id="sal-save-btn" class="btn btn-primary">Save All to Expenses</button>' +
+        '</div>' +
+        '<div id="sal-preview-content"></div>' +
+      '</div>' +
+      '<div class="exp-list-section mt-16">' +
+        '<h3 class="section-subheading">Salary Records</h3>' +
+        '<div class="exp-filters">' +
+          '<input type="date" id="sal-hist-start" aria-label="Salary history filter start">' +
+          '<input type="date" id="sal-hist-end" aria-label="Salary history filter end">' +
+          '<button type="button" id="sal-hist-filter" class="btn btn-secondary">Filter</button>' +
+        '</div>' +
+        '<div id="sal-history-content" class="mt-16">' +
+          '<p class="placeholder-text">Switch to Salary tab to load records.</p>' +
         '</div>' +
       '</div>';
+  }
+
+  function _getFirstDayOfCurrentMonth() {
+    var now = new Date();
+    var y = now.getFullYear();
+    var m = String(now.getMonth() + 1).padStart(2, '0');
+    return y + '-' + m + '-01';
   }
 
   /**
@@ -387,6 +452,57 @@ var ExpenseTracker = (function () {
     if (filterBtn) {
       filterBtn.addEventListener('click', function () {
         _loadExpenses();
+      });
+    }
+
+    // Expense / Salary tab switching
+    var tabExpenses = document.getElementById('exp-tab-expenses');
+    if (tabExpenses) tabExpenses.addEventListener('click', function () { _switchExpTab('expenses'); });
+
+    var tabSalary = document.getElementById('exp-tab-salary');
+    if (tabSalary) tabSalary.addEventListener('click', function () { _switchExpTab('salary'); });
+
+    // Salary: select all / clear all employee checkboxes
+    var salSelectAll = document.getElementById('sal-select-all');
+    if (salSelectAll) {
+      salSelectAll.addEventListener('click', function () {
+        var boxes = document.querySelectorAll('.sal-emp-checkbox');
+        for (var i = 0; i < boxes.length; i++) boxes[i].checked = true;
+      });
+    }
+
+    var salClearAll = document.getElementById('sal-clear-all');
+    if (salClearAll) {
+      salClearAll.addEventListener('click', function () {
+        var boxes = document.querySelectorAll('.sal-emp-checkbox');
+        for (var i = 0; i < boxes.length; i++) boxes[i].checked = false;
+      });
+    }
+
+    // Salary: generate
+    var salGenerateBtn = document.getElementById('sal-generate-btn');
+    if (salGenerateBtn) salGenerateBtn.addEventListener('click', _handleGenerateSalary);
+
+    // Salary: save (button is inside panel, hidden initially; attach via panel delegation)
+    var salPanel = document.getElementById('exp-panel-salary');
+    if (salPanel) {
+      salPanel.addEventListener('click', function (e) {
+        if (e.target && e.target.id === 'sal-save-btn') _handleSaveSalaries();
+      });
+    }
+
+    // Salary history filter
+    var salHistFilter = document.getElementById('sal-hist-filter');
+    if (salHistFilter) salHistFilter.addEventListener('click', _loadSalaryHistory);
+
+    // Salary history delete (delegated — buttons are rendered dynamically)
+    var salHistContent = document.getElementById('sal-history-content');
+    if (salHistContent) {
+      salHistContent.addEventListener('click', function (e) {
+        var btn = e.target.closest('.sal-del-btn');
+        if (btn) {
+          _handleDeleteSalaryRecord(btn.getAttribute('data-id'), btn.getAttribute('data-name'));
+        }
       });
     }
   }
@@ -545,6 +661,414 @@ var ExpenseTracker = (function () {
       '</tr>';
     }
     tbody.innerHTML = html;
+  }
+
+  // ─── Salary Tab ──────────────────────────────────────────────────────────────
+
+  function _switchExpTab(tab) {
+    var tabExp = document.getElementById('exp-tab-expenses');
+    var tabSal = document.getElementById('exp-tab-salary');
+    var panelExp = document.getElementById('exp-panel-expenses');
+    var panelSal = document.getElementById('exp-panel-salary');
+    if (!tabExp || !tabSal || !panelExp || !panelSal) return;
+
+    if (tab === 'expenses') {
+      tabExp.classList.add('active'); tabExp.setAttribute('aria-selected', 'true');
+      tabSal.classList.remove('active'); tabSal.setAttribute('aria-selected', 'false');
+      panelExp.style.display = ''; panelSal.style.display = 'none';
+    } else {
+      tabSal.classList.add('active'); tabSal.setAttribute('aria-selected', 'true');
+      tabExp.classList.remove('active'); tabExp.setAttribute('aria-selected', 'false');
+      panelExp.style.display = 'none'; panelSal.style.display = '';
+      _loadSalaryEmployees();
+      _loadSalaryHistory();
+    }
+  }
+
+  async function _loadSalaryEmployees() {
+    var container = document.getElementById('sal-employee-list');
+    if (!container) return;
+
+    container.innerHTML = '<p class="placeholder-text">Loading employees...</p>';
+
+    var employees = [];
+    try {
+      if (typeof Employee !== 'undefined' && Employee.getActiveEmployees) {
+        employees = await Employee.getActiveEmployees();
+      }
+    } catch (e) {
+      employees = [];
+    }
+
+    if (!employees || employees.length === 0) {
+      container.innerHTML = '<p class="empty-state">No active employees found.</p>';
+      return;
+    }
+
+    var esc = Utils.escapeHtml;
+    var html = '';
+    for (var i = 0; i < employees.length; i++) {
+      var emp = employees[i];
+      html += '<label class="sal-emp-checkbox-label">' +
+        '<input type="checkbox" class="sal-emp-checkbox" ' +
+          'value="' + esc(emp.employee_code) + '" ' +
+          'data-name="' + esc(emp.name) + '" ' +
+          'data-salary="' + (Number(emp.monthly_salary) || 0) + '" checked>' +
+        '<div class="sal-emp-info">' +
+          '<span class="sal-emp-name">' + esc(emp.name) + '</span>' +
+          '<span class="sal-emp-meta">' + esc(emp.employee_code) + ' · ' + Utils.formatCurrency(Number(emp.monthly_salary) || 0) + '/mo</span>' +
+        '</div>' +
+      '</label>';
+    }
+    container.innerHTML = html;
+  }
+
+  async function _handleGenerateSalary() {
+    var startInput = document.getElementById('sal-start-date');
+    var endInput = document.getElementById('sal-end-date');
+    var errorEl = document.getElementById('sal-date-error');
+    if (errorEl) errorEl.textContent = '';
+
+    var startDate = startInput ? startInput.value : '';
+    var endDate = endInput ? endInput.value : '';
+
+    if (!startDate || !endDate) {
+      if (errorEl) errorEl.textContent = 'Please select both start and end dates.';
+      return;
+    }
+
+    var start = new Date(startDate);
+    var end = new Date(endDate);
+
+    if (end < start) {
+      if (errorEl) errorEl.textContent = 'End date must be on or after start date.';
+      return;
+    }
+
+    var totalDays = Math.round((end.getTime() - start.getTime()) / (1000 * 60 * 60 * 24)) + 1;
+    if (totalDays > 31) {
+      if (errorEl) errorEl.textContent = 'Date range cannot exceed 31 days.';
+      return;
+    }
+
+    var checkboxes = document.querySelectorAll('.sal-emp-checkbox:checked');
+    if (checkboxes.length === 0) {
+      Utils.showToast('Please select at least one employee.', 'error');
+      return;
+    }
+
+    var selectedEmps = [];
+    for (var i = 0; i < checkboxes.length; i++) {
+      selectedEmps.push({
+        employee_code: checkboxes[i].value,
+        name: checkboxes[i].getAttribute('data-name'),
+        monthly_salary: Number(checkboxes[i].getAttribute('data-salary')) || 0
+      });
+    }
+
+    var genBtn = document.getElementById('sal-generate-btn');
+    if (genBtn) { genBtn.disabled = true; genBtn.textContent = 'Generating...'; }
+
+    try {
+      // Get attendance records for the range
+      var attRecords = [];
+      if (typeof Attendance !== 'undefined' && Attendance.getAttendance) {
+        attRecords = await Attendance.getAttendance({ startDate: startDate, endDate: endDate });
+      }
+
+      var attMap = {};
+      for (var j = 0; j < attRecords.length; j++) {
+        var rec = attRecords[j];
+        if (!attMap[rec.employee_code]) {
+          attMap[rec.employee_code] = { present: 0, halfDay: 0 };
+        }
+        if (rec.status === 'Present') attMap[rec.employee_code].present++;
+        else if (rec.status === 'Half Day') attMap[rec.employee_code].halfDay++;
+      }
+
+      // Get sales by employee for the range
+      var salesMap = {};
+      try {
+        var txStart = new Date(startDate); txStart.setHours(0, 0, 0, 0);
+        var txEnd = new Date(endDate); txEnd.setHours(23, 59, 59, 999);
+        var txns = await DataLayer.queryDocuments('transactions', {
+          where: [
+            { field: 'date', op: '>=', value: txStart },
+            { field: 'date', op: '<=', value: txEnd }
+          ]
+        });
+        for (var k = 0; k < txns.length; k++) {
+          var items = txns[k].items || [];
+          for (var l = 0; l < items.length; l++) {
+            var empCode = items[l].employee_code || '';
+            if (empCode) {
+              salesMap[empCode] = (salesMap[empCode] || 0) + (items[l].line_total || 0);
+            }
+          }
+        }
+      } catch (e) {
+        console.error('Salary: Failed to load sales data:', e);
+      }
+
+      _salaryGeneratedRows = [];
+      for (var m = 0; m < selectedEmps.length; m++) {
+        var emp = selectedEmps[m];
+        var att = attMap[emp.employee_code] || { present: 0, halfDay: 0 };
+        var effectiveDays = att.present + (att.halfDay * 0.5);
+        var calculatedSalary = totalDays > 0
+          ? Math.round(emp.monthly_salary / totalDays * effectiveDays)
+          : 0;
+
+        _salaryGeneratedRows.push({
+          employee_code: emp.employee_code,
+          name: emp.name,
+          monthly_salary: emp.monthly_salary,
+          days_present: att.present,
+          days_half_day: att.halfDay,
+          effective_days: effectiveDays,
+          total_days: totalDays,
+          calculated_salary: calculatedSalary,
+          total_sales: salesMap[emp.employee_code] || 0,
+          start_date: startDate,
+          end_date: endDate,
+          overlaps: []
+        });
+      }
+
+      // Overlap detection: check existing salary records for each selected employee
+      try {
+        var allSalary = await getExpenses({ category: 'Salary' });
+        var overlapMap = {};
+        for (var n = 0; n < allSalary.length; n++) {
+          var sr = allSalary[n];
+          var srCode = sr.employee_code || '';
+          var srStart = sr.salary_period_start || '';
+          var srEnd = sr.salary_period_end || '';
+          if (!srCode || !srStart || !srEnd) continue;
+          // Two date ranges overlap if srStart <= endDate AND srEnd >= startDate
+          if (srStart <= endDate && srEnd >= startDate) {
+            if (!overlapMap[srCode]) overlapMap[srCode] = [];
+            overlapMap[srCode].push(srStart + ' – ' + srEnd);
+          }
+        }
+        for (var p = 0; p < _salaryGeneratedRows.length; p++) {
+          _salaryGeneratedRows[p].overlaps = overlapMap[_salaryGeneratedRows[p].employee_code] || [];
+        }
+      } catch (e) {
+        console.error('Salary: overlap check failed:', e);
+      }
+
+      _renderSalaryPreview(_salaryGeneratedRows);
+    } catch (e) {
+      Utils.showToast('Failed to generate salary: ' + e.message, 'error');
+    } finally {
+      if (genBtn) { genBtn.disabled = false; genBtn.textContent = 'Generate Salary'; }
+    }
+  }
+
+  function _renderSalaryPreview(rows) {
+    var section = document.getElementById('sal-preview-section');
+    var content = document.getElementById('sal-preview-content');
+    if (!content) return;
+
+    if (!rows || rows.length === 0) {
+      if (section) section.style.display = '';
+      content.innerHTML = '<p class="empty-state">No data to preview.</p>';
+      return;
+    }
+
+    var esc = Utils.escapeHtml;
+    var html = '<div class="table-wrapper"><table class="data-table">';
+    html += '<thead><tr>';
+    html += '<th>Employee</th><th>Present</th><th>Half Day</th><th>Eff. / Total Days</th>';
+    html += '<th>Base Salary</th><th>Total Sales</th><th>Final Salary (₹)</th>';
+    html += '</tr></thead><tbody>';
+
+    for (var i = 0; i < rows.length; i++) {
+      var row = rows[i];
+      var safeId = row.employee_code.replace(/[^a-zA-Z0-9_-]/g, '_');
+      html += '<tr>';
+      var overlapHtml = '';
+      if (row.overlaps && row.overlaps.length > 0) {
+        overlapHtml = '<br><span class="sal-overlap-badge">⚠ Overlap: ' + esc(row.overlaps.join(', ')) + '</span>';
+      }
+      html += '<td><strong>' + esc(row.name) + '</strong><br><small>' + esc(row.employee_code) + '</small>' + overlapHtml + '</td>';
+      html += '<td>' + row.days_present + '</td>';
+      html += '<td>' + row.days_half_day + '</td>';
+      html += '<td>' + row.effective_days + ' / ' + row.total_days + '</td>';
+      html += '<td>' + Utils.formatCurrency(row.monthly_salary) + '</td>';
+      html += '<td>' + Utils.formatCurrency(row.total_sales) + '</td>';
+      html += '<td><input type="number" class="sal-amount-input" id="sal-amt-' + safeId + '" ' +
+        'value="' + row.calculated_salary + '" min="0" step="1" ' +
+        'aria-label="Final salary for ' + esc(row.name) + '"></td>';
+      html += '</tr>';
+    }
+
+    html += '</tbody></table></div>';
+    content.innerHTML = html;
+    if (section) section.style.display = '';
+  }
+
+  async function _handleSaveSalaries() {
+    if (!_salaryGeneratedRows || _salaryGeneratedRows.length === 0) {
+      Utils.showToast('No salary data to save.', 'error');
+      return;
+    }
+
+    var hasOverlaps = _salaryGeneratedRows.some(function(r) { return r.overlaps && r.overlaps.length > 0; });
+    if (hasOverlaps) {
+      Utils.showToast('Warning: some employees already have salary records for this period. Saving duplicate.', 'error');
+    }
+
+    var saveBtn = document.getElementById('sal-save-btn');
+    if (saveBtn) { saveBtn.disabled = true; saveBtn.textContent = 'Saving...'; }
+
+    var saved = 0;
+    var skipped = 0;
+    var errors = 0;
+
+    for (var i = 0; i < _salaryGeneratedRows.length; i++) {
+      var row = _salaryGeneratedRows[i];
+      var safeId = row.employee_code.replace(/[^a-zA-Z0-9_-]/g, '_');
+      var input = document.getElementById('sal-amt-' + safeId);
+      var finalAmount = input ? Math.round(Math.max(0, Number(input.value) || 0)) : row.calculated_salary;
+
+      if (finalAmount <= 0) { skipped++; continue; }
+
+      var docData = {
+        date: new Date(row.end_date).toISOString(),
+        amount: finalAmount,
+        description: 'Salary: ' + row.name + ' (' + row.start_date + ' to ' + row.end_date + ')',
+        category: 'Salary',
+        employee_code: row.employee_code,
+        employee_name: row.name,
+        salary_period_start: row.start_date,
+        salary_period_end: row.end_date,
+        days_present: row.days_present,
+        days_half_day: row.days_half_day,
+        base_salary: row.monthly_salary,
+        created_at: new Date().toISOString()
+      };
+
+      try {
+        await DataLayer.addDocument(COLLECTION_EXPENSES, docData);
+        saved++;
+      } catch (e) {
+        console.error('Salary: Failed to save for', row.employee_code, e);
+        errors++;
+      }
+    }
+
+    if (saveBtn) { saveBtn.disabled = false; saveBtn.textContent = 'Save All to Expenses'; }
+
+    if (errors > 0) {
+      Utils.showToast('Saved ' + saved + ', failed ' + errors + '.', 'error');
+    } else if (saved > 0) {
+      Utils.showToast('Salary saved for ' + saved + ' employee(s).', 'success');
+      var section = document.getElementById('sal-preview-section');
+      if (section) section.style.display = 'none';
+      _salaryGeneratedRows = [];
+      _loadSalaryHistory();
+    } else {
+      Utils.showToast('No salary amounts to save (all zero or skipped).', 'error');
+    }
+  }
+
+  async function _loadSalaryHistory() {
+    var content = document.getElementById('sal-history-content');
+    if (!content) return;
+
+    content.innerHTML = '<p class="placeholder-text">Loading salary records...</p>';
+
+    var histStart = document.getElementById('sal-hist-start');
+    var histEnd = document.getElementById('sal-hist-end');
+
+    var filters = { category: 'Salary' };
+    if (histStart && histStart.value) filters.startDate = histStart.value;
+    if (histEnd && histEnd.value) filters.endDate = histEnd.value;
+
+    try {
+      var records = await getExpenses(filters);
+      _renderSalaryHistoryTable(records, content);
+    } catch (e) {
+      content.innerHTML = '<p class="empty-state">Failed to load salary records.</p>';
+    }
+  }
+
+  function _renderSalaryHistoryTable(records, content) {
+    if (!content) return;
+
+    if (!records || records.length === 0) {
+      content.innerHTML = '<p class="empty-state">No salary records found.</p>';
+      return;
+    }
+
+    var esc = Utils.escapeHtml;
+    var html = '<div class="table-wrapper"><table class="data-table">';
+    html += '<thead><tr>';
+    html += '<th>Employee</th><th>Code</th><th>Period</th><th>Days</th><th>Amount</th><th></th>';
+    html += '</tr></thead><tbody>';
+
+    for (var i = 0; i < records.length; i++) {
+      var rec = records[i];
+      var empName = rec.employee_name || rec.employee_code || '';
+      var period = (rec.salary_period_start && rec.salary_period_end)
+        ? esc(rec.salary_period_start) + ' – ' + esc(rec.salary_period_end)
+        : esc(Utils.formatDate(rec.date));
+      var daysInfo = rec.days_present !== undefined
+        ? rec.days_present + (rec.days_half_day ? ' + ' + rec.days_half_day + '½' : '')
+        : '-';
+
+      html += '<tr>';
+      html += '<td>' + esc(empName) + '</td>';
+      html += '<td>' + esc(rec.employee_code || '') + '</td>';
+      html += '<td>' + period + '</td>';
+      html += '<td>' + daysInfo + '</td>';
+      html += '<td>' + Utils.formatCurrency(rec.amount) + '</td>';
+      html += '<td><button type="button" class="btn btn-sm btn-danger sal-del-btn" ' +
+        'data-id="' + esc(rec.id || '') + '" data-name="' + esc(empName) + '" ' +
+        'aria-label="Delete salary record for ' + esc(empName) + '">Delete</button></td>';
+      html += '</tr>';
+    }
+
+    html += '</tbody></table></div>';
+    content.innerHTML = html;
+  }
+
+  function _showConfirm(message, onConfirm) {
+    var overlay = document.getElementById('confirm-dialog');
+    var msgEl = document.getElementById('confirm-dialog-message');
+    var okBtn = document.getElementById('confirm-dialog-ok');
+    var cancelBtn = document.getElementById('confirm-dialog-cancel');
+    if (!overlay || !okBtn || !cancelBtn) { onConfirm(); return; }
+
+    msgEl.textContent = message;
+    overlay.removeAttribute('hidden');
+
+    function cleanup() {
+      overlay.setAttribute('hidden', '');
+      okBtn.removeEventListener('click', handleOk);
+      cancelBtn.removeEventListener('click', handleCancel);
+    }
+    function handleOk() { cleanup(); onConfirm(); }
+    function handleCancel() { cleanup(); }
+
+    okBtn.addEventListener('click', handleOk);
+    cancelBtn.addEventListener('click', handleCancel);
+  }
+
+  function _handleDeleteSalaryRecord(docId, empName) {
+    if (!docId) return;
+
+    _showConfirm('Delete salary record for ' + empName + '?', async function () {
+      try {
+        await DataLayer.deleteDocument(COLLECTION_EXPENSES, docId);
+        Utils.showToast('Salary record deleted.', 'success');
+        _loadSalaryHistory();
+      } catch (e) {
+        Utils.showToast('Failed to delete: ' + e.message, 'error');
+      }
+    });
   }
 
   /**

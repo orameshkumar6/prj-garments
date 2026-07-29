@@ -2840,3 +2840,155 @@ textarea::placeholder {
     padding: 16px;
   }
 }
+
+/* ============================================================
+   SALARY TAB
+   ============================================================ */
+
+.sal-emp-controls {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 12px;
+  flex-wrap: wrap;
+}
+
+.sal-emp-controls strong {
+  color: var(--color-text);
+  font-size: 0.875rem;
+}
+
+.sal-employee-list {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  gap: 6px;
+  padding: 12px;
+  background: var(--color-bg);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-card, 12px);
+  max-height: 260px;
+  overflow-y: auto;
+}
+
+.sal-emp-checkbox-label {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  padding: 8px;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+
+.sal-emp-checkbox-label:hover {
+  background: var(--color-primary-alpha-8, rgba(98, 0, 234, 0.08));
+}
+
+.sal-emp-checkbox-label input[type="checkbox"] {
+  margin-top: 2px;
+  flex-shrink: 0;
+  width: 16px;
+  height: 16px;
+  accent-color: var(--color-primary);
+  cursor: pointer;
+}
+
+.sal-emp-info {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.sal-emp-name {
+  font-weight: 500;
+  color: var(--color-text);
+  font-size: 0.875rem;
+}
+
+.sal-emp-meta {
+  font-size: 0.75rem;
+  color: var(--color-text-secondary);
+}
+
+.sal-preview-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 12px;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.sal-preview-header .section-subheading {
+  margin-bottom: 0;
+}
+
+.sal-overlap-badge {
+  display: inline-block;
+  font-size: 0.7rem;
+  font-weight: 600;
+  color: #b45309;
+  background: #fef3c7;
+  border: 1px solid #fcd34d;
+  border-radius: 4px;
+  padding: 1px 5px;
+  margin-top: 3px;
+  line-height: 1.4;
+}
+
+[data-theme="dark"] .sal-overlap-badge {
+  color: #fcd34d;
+  background: rgba(252, 211, 77, 0.12);
+  border-color: rgba(252, 211, 77, 0.35);
+}
+
+[data-theme="blue"] .sal-overlap-badge {
+  color: #92400e;
+  background: #fef3c7;
+  border-color: #fcd34d;
+}
+
+.sal-amount-input {
+  width: 110px;
+  padding: 5px 8px;
+  border: 1px solid var(--color-border);
+  border-radius: 6px;
+  background: var(--color-surface);
+  color: var(--color-text);
+  font-size: 0.875rem;
+  text-align: right;
+}
+
+.sal-amount-input:focus {
+  outline: none;
+  border-color: var(--color-primary);
+  box-shadow: var(--input-focus-ring, 0 0 0 3px rgba(98, 0, 234, 0.12));
+}
+
+[data-theme="dark"] .sal-employee-list,
+[data-theme="blue"] .sal-employee-list {
+  background: var(--color-surface);
+}
+
+[data-theme="dark"] .sal-amount-input,
+[data-theme="blue"] .sal-amount-input {
+  background: var(--color-surface);
+  color: var(--color-text);
+  border-color: var(--color-border);
+}
+
+@media (max-width: 768px) {
+  .sal-employee-list {
+    grid-template-columns: 1fr;
+    max-height: 200px;
+  }
+
+  .sal-preview-header {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .sal-amount-input {
+    width: 90px;
+  }
+}
