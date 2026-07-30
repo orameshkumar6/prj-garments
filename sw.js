@@ -1,4 +1,4 @@
-var CACHE_NAME = 'prj-garments-v8';
+var CACHE_NAME = 'prj-garments-v9';
 var ASSETS = [
   './',
   './index.html',

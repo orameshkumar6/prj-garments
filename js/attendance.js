@@ -8,7 +8,7 @@ var Attendance = (function () {
   // ─── Constants ──────────────────────────────────────────────────────────────
 
   var COLLECTION = 'attendance';
-  var STATUS_OPTIONS = ['Present', 'Absent', 'Half Day'];
+  var STATUS_OPTIONS = ['Present', 'Absent', 'Half Day', 'Holiday/Paid Leave'];
 
   // ─── Private State ──────────────────────────────────────────────────────────
 
@@ -44,7 +44,7 @@ var Attendance = (function () {
     }
 
     if (STATUS_OPTIONS.indexOf(data.status) === -1) {
-      return { success: false, error: 'Status must be one of: Present, Absent, Half Day.' };
+      return { success: false, error: 'Status must be one of: Present, Absent, Half Day, Holiday/Paid Leave.' };
     }
 
     try {
@@ -146,7 +146,7 @@ var Attendance = (function () {
         if (!attendanceMap[rec.employee_code]) {
           attendanceMap[rec.employee_code] = { present: 0, absent: 0, halfDay: 0 };
         }
-        if (rec.status === 'Present') {
+        if (rec.status === 'Present' || rec.status === 'Holiday/Paid Leave') {
           attendanceMap[rec.employee_code].present++;
         } else if (rec.status === 'Absent') {
           attendanceMap[rec.employee_code].absent++;
@@ -350,7 +350,7 @@ var Attendance = (function () {
     // Render employee list with radio buttons
     var esc = Utils.escapeHtml;
     var html = '<div class="table-wrapper"><table class="data-table">';
-    html += '<thead><tr><th>Code</th><th>Name</th><th>Present</th><th>Absent</th><th>Half Day</th></tr></thead>';
+    html += '<thead><tr><th>Code</th><th>Name</th><th>Present</th><th>Absent</th><th>Half Day</th><th>Holiday/PL</th></tr></thead>';
     html += '<tbody>';
 
     for (var j = 0; j < _activeEmployees.length; j++) {
@@ -364,6 +364,7 @@ var Attendance = (function () {
       html += '<td><input type="radio" name="' + rowName + '" id="' + rowName + '-present" value="Present" data-code="' + esc(emp.employee_code) + '" data-name="' + esc(emp.name) + '" aria-label="' + esc(emp.name) + ' Present"' + (existing === 'Present' ? ' checked' : '') + '></td>';
       html += '<td><input type="radio" name="' + rowName + '" id="' + rowName + '-absent" value="Absent" data-code="' + esc(emp.employee_code) + '" data-name="' + esc(emp.name) + '" aria-label="' + esc(emp.name) + ' Absent"' + (existing === 'Absent' ? ' checked' : '') + '></td>';
       html += '<td><input type="radio" name="' + rowName + '" id="' + rowName + '-halfday" value="Half Day" data-code="' + esc(emp.employee_code) + '" data-name="' + esc(emp.name) + '" aria-label="' + esc(emp.name) + ' Half Day"' + (existing === 'Half Day' ? ' checked' : '') + '></td>';
+      html += '<td><input type="radio" name="' + rowName + '" id="' + rowName + '-holiday" value="Holiday/Paid Leave" data-code="' + esc(emp.employee_code) + '" data-name="' + esc(emp.name) + '" aria-label="' + esc(emp.name) + ' Holiday/Paid Leave"' + (existing === 'Holiday/Paid Leave' ? ' checked' : '') + '></td>';
       html += '</tr>';
     }
 
